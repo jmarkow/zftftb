@@ -25,11 +25,6 @@ DATA=DATA./abs(max(DATA));
 
 sonogram_im=zftftb_pretty_sonogram(DATA,48e3,'n',FFTWINDOW,'overlap',NOVERLAP,'low',1);
 sonogram_im=flipdim(sonogram_im,1);
-%sonogram_im=spectrogram(DATA,FFTWINDOW,NOVERLAP);
-%sonogram_im=abs(flipdim(sonogram_im,1));
-%sonogram_im=sonogram_im-min(min(sonogram_im));
-%sonogram_im=log(sonogram_im);
-%sonogram_im=125*sonogram_im/(max(max(sonogram_im)));
 
 [height,width]=size(sonogram_im);
 
