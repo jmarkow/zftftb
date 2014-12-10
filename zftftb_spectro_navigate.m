@@ -1,4 +1,4 @@
-function [EXTRACTED_SOUND,EXTRACTED_IMAGE,TIME_POINTS]=markolab_spectro_navigate(DATA)
+function [EXTRACTED_SOUND,EXTRACTED_IMAGE,TIME_POINTS]=markolab_spectro_navigate(DATA,FS)
 %simple GUI for selecting a sound using its spectrogram
 %
 %	[EXTRACTED_SOUND,EXTRACTED_IMAGE]=spectro_navigate(DATA,DIR)
@@ -10,12 +10,18 @@ function [EXTRACTED_SOUND,EXTRACTED_IMAGE,TIME_POINTS]=markolab_spectro_navigate
 %
 %
 
+if nargin<2
+	disp('Setting FS to 48e3...');
+	FS=48e3;
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % parameters for constructing the spectrogram image
+% overlap will define time resolution for the selection
 
-FFTWINDOW=500;
-NOVERLAP=400;
+len=30;
+overlap=29.5;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -23,8 +29,8 @@ DATA=DATA./abs(max(DATA));
 
 % sampling rate doesn't matter here at all, just using a dummy value, 48e3
 
-sonogram_im=zftftb_pretty_sonogram(DATA,48e3,'n',FFTWINDOW,'overlap',NOVERLAP,'low',1);
-sonogram_im=flipdim(sonogram_im,1);
+[sonogram_im,f,t]=zftftb_pretty_sonogram(DATA,FS,'len',len,'overlap',overlap,'clipping',-5,'filtering',300);
+sonogram_im=flipdim(sonogram_im,1)*62;
 
 [height,width]=size(sonogram_im);
 
@@ -34,11 +40,15 @@ overview_fig=figure('Toolbar','none','Menubar','none');
 overview_img=imshow(uint8(sonogram_im),hot);
 
 overview_scroll=imscrollpanel(overview_fig,overview_img);
+api_scroll=iptgetapi(overview_scroll);
+
+vis_rect=api_scroll.getVisibleImageRect()
+
 imoverview(overview_img);
 
 EXTRACTED_SOUND=[];
 
-rect_handle=imrect(get(overview_fig,'CurrentAxes'),[width/2 height/2 width/4 height/4]);
+rect_handle=imrect(get(overview_fig,'CurrentAxes'),[vis_rect(1)+30 vis_rect(2)+30 vis_rect(3)/2.5 vis_rect(4)-20]);
 
 while isempty(EXTRACTED_SOUND)
 
@@ -49,11 +59,11 @@ while isempty(EXTRACTED_SOUND)
 	selected_width=rect_position(1)+rect_position(3);
 
 	if selected_width>width, selected_width=width; end
+
+	EXTRACTED_IMAGE=sonogram_im(:,rect_position(1):selected_width);	
 	
-	EXTRACTED_IMAGE=sonogram_im(:,rect_position(1):selected_width);
-	
-	extract_idxs=[fix((length(DATA)-FFTWINDOW)*(rect_position(1)/width)) ceil((length(DATA)-FFTWINDOW)*(selected_width)/width)];
-	TIME_POINTS=extract_idxs;
+	TIME_POINTS=t(rect_position(1):selected_width)
+	extract_idxs=round([TIME_POINTS(1)*FS TIME_POINTS(end)*FS])
 
 	temp_fig=figure('Toolbar','None','Menubar','None');imshow(uint8(EXTRACTED_IMAGE),hot);
 	

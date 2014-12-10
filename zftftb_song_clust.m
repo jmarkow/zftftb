@@ -58,6 +58,9 @@ function ephys_cluster(DIR,varargin)
 %
 %see also songdet.m,ephys_visual_mua.m,ephys_visual_sua.m,ephys_pipeline_smscore.m
 
+% TODO: remove all unecessary stuff, make extraction routine more extensible
+% TODO: if data in MATLAB file, use custom loading function
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 spect_thresh=.1; % deprecated, this parameter is no longer used

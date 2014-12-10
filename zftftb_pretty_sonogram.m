@@ -30,7 +30,7 @@ for i=1:2:nparams
 	switch lower(varargin{i})
 		case 'overlap'
 			overlap=varargin{i+1};
-		case 'n'
+		case 'len'
 			len=varargin{i+1};
 		case 'tscale'
 			tscale=varargin{i+1};
