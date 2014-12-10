@@ -1,4 +1,4 @@
-function ephys_cluster(DIR,varargin)
+function zftftb_song_clust(DIR,varargin)
 %extracts and aligns renditions of a template along with slaved ephys
 %
 %example:
@@ -134,70 +134,10 @@ end
 
 prev_run_listing={};
 
-listing=dir(fullfile(DIR));
-
-% all embedded directories could be previous runs
-
-for i=1:length(listing)
-	if listing(i).isdir
-		prev_run_listing{end+1}=listing(i).name;
-	end
-end
-
-proc_dir=[];
-
-% check for previous runs
-
-if ~isempty(prev_run_listing)
-	response=[];
-	while isempty(response)
-		response=input('Would you like to go to a (p)revious run or (c)reate a new one?  ','s');
-		
-		switch lower(response(1))
-
-			case 'p'
-				dir_num=menu('Which directory would you like to use?',prev_run_listing);
-
-				if isempty(dir_num), continue; end
-
-				dir_name=prev_run_listing{dir_num};
-				proc_dir=fullfile(DIR,dir_name);
-
-			case 'c'
-
-			otherwise
-				response=[];
-		end
-
-	end
-end
-
-% prompt the user for a directory name if necessary
-
-if isempty(proc_dir)
-
-	dir_name=[];
-
-	while isempty(dir_name)
-
-		dir_name=input('What would you like to name the new directory?  ','s');
-
-		if exist(fullfile(DIR,dir_name),'dir')
-			warning('ephysPipeline:ephysCluster:direxist','Directory exists!');
-			dir_name=[];
-		end
-
-	end
-
-	proc_dir=fullfile(DIR,[ dir_name '_MANUALCLUST']);
-	mkdir(proc_dir);
-
-end
+proc_dir=zftftb_directory_check(DIR);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TEMPLATE CHECK %%%%%%%%%%%%%%%%%%%%%
-
-
 
 % check for previously extracted templates
 
@@ -226,7 +166,7 @@ end
 % generate a nice sonogram of the selected template
 
 template_fig=figure('Visible','off');
-[template_image,f,t]=pretty_sonogram(template.data,template.fs,'N',1024,'overlap',1000,'low',1);
+[template_image,f,t]=zftftb_pretty_sonogram(template.data,template.fs,'N',1024,'overlap',1000,'low',1);
 
 startidx=max([find(f<=min_f);1]);
 
@@ -407,57 +347,6 @@ if ~skip
 	save(fullfile(proc_dir,'extracted_data.mat'),'used_filenames','agg_audio','agg_ephys','agg_ttl','used_filenames','-v7.3');
 end
 
-
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TEMPLATE SELECT %%%%%%%%%%%%%%%%%%%%
-
-function [TEMPLATE]=select_template(DIR)
-
-pause(.001); % inserting 1 msec pause since uigetfile does not always open without it, not sure why...
-
-response=[];
-
-while isempty(response)
-	[filename,pathname]=uigetfile('*.mat','Pick a sound file to extract the template from',fullfile(DIR));
-	
-	is_legacy=check_legacy(fullfile(pathname,filename));
-
-	if is_legacy
-		load(fullfile(pathname,filename),'mic_data','fs');
-		audio.data=mic_data;
-		audio.fs=fs;
-
-		clearvars mic_data fs;
-	else
-		load(fullfile(pathname,filename),'audio');
-	end
-
-	TEMPLATE.data=spectro_navigate(audio.data);
-	TEMPLATE.fs=audio.fs;
-
-	response2=[];
-	while isempty(response2)
-		
-		response2=input('(C)ontinue with selected template or (s)elect another sound file?  ','s');
-
-		switch lower(response2(1))
-			case 'c'
-				response=1;
-			case 's'
-				response=[];
-			otherwise
-				response2=[];
-		end
-
-	end
-end
 
 end
 
