@@ -1,17 +1,59 @@
-function [song_idx power f t song_detvec]=song_det(audio,fs,minfs,maxfs,window,noverlap,songduration,ratio_thresh,song_thresh,pow_thresh)
-%based on Andalmann's code
+function [SONG_IDX,T]=zftftb_song_det(AUDIO,FS,varargin)
+%based on Andalmann's algorithm
+
+if nargin<2
+	disp('Setting FS to 30e3...');
+	FS=30e3;
+end
+
+% the template cutoff could be defined by the 95th prctile of the abs(noise) magnitude
+
+nparams=length(varargin);
+
+if mod(nparams,2)>0
+	error('Parameters must be specified as parameter/value pairs!');
+end
+
+len=.005; % window length (s)
+song_band=[3e3 7e3];
+overlap=0; % overlap (s)
+song_duration=.8; % smoothing (s) 
+ratio_thresh=2; % ratio song:nonsong
+pow_thresh=.05; % power threshold (au)
+
+for i=1:2:nparams
+	switch lower(varargin{i})
+		case 'song_band'
+			song_band=varargin{i+1};
+		case 'len'
+			len=varargin{i+1};
+		case 'overlap'
+			overlap=varargin{i+1};
+		case 'song_duration'
+			song_duration=varargin{i+1};
+		case 'ratio_thresh'
+			ratio_thresh=varargin{i+1};
+		case 'song_thresh'
+			song_thresh=varargin{i+1};
+		case 'pow_thresh'
+			pow_thresh=varargin{i+1};
+	end
+end
+
+len=round(len*FS);
+overlap=round(overlap*FS);
 
 if nargin<10 | isempty(pow_thresh)
     pow_thresh=0;
 end
 
-[s,f,t]=spectrogram(audio,window,noverlap,[],fs);
+[s,f,T]=spectrogram(AUDIO,len,overlap,[],FS);
 
-% take the power and find our fs band
+% take the power and find our FS band
 
 power=abs(s);
-min_idx=max(find(f<=minfs));
-max_idx=min(find(f>=maxfs));
+min_idx=max(find(f<=song_band(1)));
+max_idx=min(find(f>=song_band(2)));
 
 % take the song/nonsong power ratio
 
@@ -19,11 +61,11 @@ song=mean(power(min_idx:max_idx,:),1);
 nonsong=mean(power([1:min_idx-1 max_idx+1:end],:),1)+eps;
 
 song_ratio=song./nonsong;
-%song_detvec=smooth(double(song_ratio>ratio_thresh),round((fs*songduration)/(window-noverlap)));
+%song_detvec=smooth(double(song_ratio>ratio_thresh),round((FS*song_duration)/(len-overlap)));
 
 % convolve with a moving average filter
 
-filt_size=round((fs*songduration)/(window-noverlap));
+filt_size=round((FS*song_duration)/(len-overlap));
 mov_filt=ones(1,filt_size)*1/filt_size;
 song_detvec=conv(double(song_ratio>ratio_thresh),mov_filt,'same');
 
@@ -34,5 +76,5 @@ ratio_idx=song_detvec>song_thresh;
 
 %%%%
 
-song_idx=pow_idx&ratio_idx;
+SONG_IDX=pow_idx&ratio_idx;
 

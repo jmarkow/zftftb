@@ -10,15 +10,17 @@ if nargin<2 | isempty(FS)
 	FS=48e3;
 end
 
-overlap=2000;
-tscale=2;
-N=2048;
-postproc='y';
+overlap=67; % window overlap (ms)
+tscale=2; % gauss timescale (ms)
+len=70; % window length (ms)
+postproc='y'; % postprocessing
 nparams=length(varargin);
 nfft=[];
-low=3;
-high=10;
 zeropad=[];
+norm_amp=1; % normalize amplitude?
+filtering=[];
+clipping=-2; % clipping
+saturation=.8; % image saturation (0-1)
 
 if mod(nparams,2)>0
 	error('Parameters must be specified as parameter/value pairs!');
@@ -29,7 +31,7 @@ for i=1:2:nparams
 		case 'overlap'
 			overlap=varargin{i+1};
 		case 'n'
-			N=varargin{i+1};
+			len=varargin{i+1};
 		case 'tscale'
 			tscale=varargin{i+1};
 		case 'postproc'
@@ -40,60 +42,78 @@ for i=1:2:nparams
 			low=varargin{i+1};
 		case 'high'
 			high=varargin{i+1};
-        case 'zeropad'
-            zeropad=varargin{i+1};
+        	case 'zeropad'
+            		zeropad=varargin{i+1};
+		case 'norm_amp'
+			norm_amp=varargin{i+1};
+		case 'filtering'
+			filtering=varargin{i+1};
+		case 'clipping'
+			clipping=varargin{i+1};
+		case 'saturation'
+			saturation=varargin{i+1};
 		otherwise
 	end
 end
 
-if length(SIGNAL)<=N
-	%disp(['Length of signal shorter than N, truncating N to ' num2str(floor(length(SIGNAL)/5))]);
-	warning('Length of signal shorter than N, trunacting N to %g',num2str(floor(length(SIGNAL)/5)));
+len=round((len/1e3)*FS);
+overlap=round((overlap/1e3)*FS);
+
+if length(SIGNAL)<=len
+	warning('Length of signal shorter than window length, trunacting len to %g',num2str(floor(length(SIGNAL)/5)));
 	fprintf(1,'\n\n');
-	difference=N-overlap;
-	N=floor(length(SIGNAL)/3);
-	overlap=N-difference;
+	difference=len-overlap;
+	len=floor(length(SIGNAL)/3);
+	overlap=len-difference;
 	nfft=[];
 end
 
 if isempty(nfft)
-	nfft=2^nextpow2(N);
+	nfft=2^nextpow2(len);
 else
 	nfft=2^nextpow2(nfft);
 end
 
 if zeropad==0
-	zeropad=round(N/2);
+	zeropad=round(len/2);
 end
-
 
 if ~isempty(zeropad)
 	SIGNAL=[zeros(zeropad,1);SIGNAL(:);zeros(zeropad,1)];
-	disp(['Zero pad: ' num2str(length(zeropad)/FS) ' S']);
+	disp(['Zero pad: ' num2str(zeropad/FS) ' S']);
 end
 
-if any(SIGNAL>1)
+if norm_amp
+	disp('Normalizing signal amplitude');
 	SIGNAL=SIGNAL./max(abs(SIGNAL));
 end
 
-t=-N/2+1:N/2;
+if ~isempty(filtering)
+	[b,a]=ellip(5,.2,40,[filtering]/(FS/2),'high');
+	SIGNAL=filtfilt(b,a,SIGNAL);
+end
+
+t=-len/2+1:len/2;
 sigma=(tscale/1e3)*FS;
 w = exp(-(t/sigma).^2);
 dw = -2*w.*(t/(sigma^2));
 
+% take the two spectrogram, use simple multi-taper approach
+
 [S,F,T]=spectrogram(SIGNAL,w,overlap,nfft,FS);
 [S2]=spectrogram(SIGNAL,dw,overlap,nfft,FS);
 
-if lower(postproc(1))=='y'
-	IMAGE=100*((abs(S)+abs(S2))/2);
-	IMAGE=log(IMAGE+2);
-	IMAGE(IMAGE>high)=high;
-	IMAGE(IMAGE<low)=low;
-	IMAGE=IMAGE-low;
-	IMAGE=IMAGE/(high-low);
-	IMAGE=63*(IMAGE); % 63 is the cutoff for GIF
+% slightly elaborate way of clipping and normalizing,
+% leaving intact for now to retain legacy compatibility
+
+if lower(postproc(1))=='y'	
+	IMAGE=log((abs(S)+abs(S2))/2);
+	IMAGE=max(IMAGE,clipping);
+	IMAGE=(IMAGE-clipping);
+	IMAGE=IMAGE./max(IMAGE(:)); % scale from 0 to 1
+	IMAGE=IMAGE*saturation;
 else
-	IMAGE=(abs(S)+abs(S2))/2;
+	IMAGE=(abs(S)+abs(S2))/2; 
 end
 
 
