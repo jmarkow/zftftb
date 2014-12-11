@@ -48,8 +48,9 @@ nfft=34;
 overlap=33;
 filtering=500; % highpass for mic trace
 mask_only=0;
-spect_thresh=.3;
+spect_thresh=.75;
 norm_amp=1;
+weighting='log';
 
 for i=1:2:nparams
 	switch lower(varargin{i})
@@ -69,6 +70,8 @@ for i=1:2:nparams
 		    	spect_thresh=varargin{i+1};
 	    	case 'norm_amp'
 			norm_amp=varargin{i+1};
+		case 'weighting'
+			weighting=varargin{i+1};
 	end
 end
 
@@ -117,6 +120,19 @@ for i=1:ntrials
 
 	[rmask_pre imask_pre spect]=zftftb_contour_approx(MIC_DATA(:,i),FS,'len',len,'overlap',overlap,'tscale',tscale,'nfft',nfft);
 
+	% log weighting
+
+	switch lower(weighting(1:3))
+		case 'log'
+			weights=log(abs(spect));
+			weights=weights-min(weights(:));
+			weights=weights./max(weights(:));
+		case 'lin'
+			weights=abs(spect);
+		otherwise
+			error('Did not understand weighting.');
+	end
+
 	re_contours(:,:,i)=uint8(rmask_pre);
 	im_contours(:,:,i)=uint8(imask_pre);
 
@@ -124,8 +140,8 @@ for i=1:ntrials
 		RMASK=RMASK+rmask_pre./ntrials;
 		IMASK=IMASK+imask_pre./ntrials;
 	else
-		RMASK=RMASK+(((rmask_pre.*abs(spect))>spect_thresh))./ntrials;
-		IMASK=IMASK+(((imask_pre.*abs(spect))>spect_thresh))./ntrials;
+		RMASK=RMASK+(((rmask_pre.*weights)>spect_thresh))./ntrials;
+		IMASK=IMASK+(((imask_pre.*weights)>spect_thresh))./ntrials;
 	end
 
 end

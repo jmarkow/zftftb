@@ -71,23 +71,17 @@ padding=[]; % padding that will be saved with the template, in seconds (relevant
 	    % e.g. [.2 .2] will extract 200 msec before and after the extraction point when clustering
 	    % sounds through the pipeline
 
-% smscore parameters, THESE MUST MATCH THE PIPELINE PARAMETERS IN EPHYS_PIPELINE.CFG, OTHERWISE
-% THE FEATURE COMPUTATION BETWEEN THE TEMPLATE AND CANDIDATE SOUNDS WILL NOT
-% BE APPROPRIATELY MATCHED
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SMSCORE PARAMETERS %%%%%%%%%%%%%%%%%
-
 len=34;
 overlap=33;
 filter_scale=10;
 downsampling=5;
-train_classifier=1;
+train_classifier=0;
 song_band=[3e3 9e3];
 
 % TODO: add option to make spectrograms and wavs of all extractions
 
-visualize=[];
-export_wav=[];
+export_spectrogram=0;
+export_wav=0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% CLASSIFICATION FEATURES NAME %%%%%%%
 
@@ -151,7 +145,7 @@ if ~exist(fullfile(proc_dir,'template_data.mat'),'file')
 	save(fullfile(proc_dir,'template_data.mat'),'template','padding');
 
 	template_fig=figure('Visible','off');
-	[template_image,f,t]=zftftb_pretty_sonogram(template.data,template.fs,'len',35,'overlap',34.9,'filtering',300);
+	[template_image,f,t]=zftftb_pretty_sonogram(template.data,template.fs,'len',35,'overlap',34.9,'filtering',300,'zeropad',0);
 
 	startidx=max([find(f<=disp_band(1));1]);
 
@@ -182,9 +176,6 @@ else
 	save(fullfile(proc_dir,'template_data.mat'),'padding','-append'); % append in case we change padding
 
 end
-
-% generate a nice sonogram of the selected template
-
 
 act_templatesize=length(template.data);
 
@@ -233,8 +224,6 @@ if ~skip
 else
 	load(fullfile(proc_dir,'cluster_data.mat'),'hits');
 end
-
-
 
 % do we need to cluster again?
 
@@ -287,7 +276,7 @@ if ~skip
 	
 	[~,labels,selection]=markolab_clust_cut(feature_matrix,property_names);
 
-	% now each row of feature matrix correspond to file id, which corresponds to file list (phew)
+	% now each row of feature matrix correspond to file id, which corresponds to file list
 
 	save(fullfile(proc_dir,'cluster_results.mat'),'labels','selection');	
 else
@@ -330,22 +319,22 @@ end
 
 
 %% train an SVM to use for classifying new sounds, easily swap in other classifiers
-%
-%if train_classifier
-%
-%	disp('Training classifier on your selection...');
-%
-%	% fix for MATLAB 2010a complaining about too many iterations...enforce that method=smo
-%	% switched to quadratic kernel function 5/28/13, linear was found to be insufficient in edge-cases
-%
-%	cluster_choice=cluster.choice;
-%
-%	% quadratic boundaries work the best in this situation
-%
-%	classobject=svmtrain(syllable_data(:,[1:6]),cluster.labels,'method','smo','kernel_function','quadratic');
-%	save(fullfile(proc_dir,'classify_data.mat'),'classobject','cluster_choice');
-%
-%end
+
+if train_classifier
+
+	disp('Training classifier on your selection...');
+
+	% fix for MATLAB 2010a complaining about too many iterations...enforce that method=smo
+	% switched to quadratic kernel function 5/28/13, linear was found to be insufficient in edge-cases
+
+	cluster_choice=selection;
+
+	% quadratic boundaries work the best in this situation
+
+	classobject=svmtrain(feature_matrix,labels,'method','smo','kernel_function','quadratic');
+	save(fullfile(proc_dir,'classify_data.mat'),'classobject','cluster_choice');
+
+end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -372,7 +361,8 @@ if exist(fullfile(proc_dir,'extracted_data.mat'),'file')
 
 
 	if ~skip
-		[agg_audio used_filenames]=zftftb_extract_hits(hits.ext_pts,hits.file_list);
+		[agg_audio used_filenames]=zftftb_extract_hits(hits.ext_pts,hits.file_list,'export_wav',export_wav,...
+			'export_spectrogram',export_spectrogram,'export_dir',proc_dir);
 		disp(['Saving data to ' fullfile(proc_dir,'extracted_data.mat')]);
 		save(fullfile(proc_dir,'extracted_data.mat'),'agg_audio','used_filenames','-v7.3');
 	end
