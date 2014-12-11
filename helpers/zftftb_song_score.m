@@ -1,4 +1,4 @@
-function [FEATURES,PARAMETERS]=ephys_pipeline_smscore(s,fs,varargin)
+function [FEATURES,PARAMETERS]=ephys_pipeline_smscore(s,FS,varargin)
 %computes spectral FEATURES of a given signal
 %
 %
@@ -10,19 +10,18 @@ if mod(nparams,2)>0
 	error('Parameters must be specified as parameter/value pairs');
 end
 
-n=1024; % spectrogram window size
-overlap=1000; % spectrogram overlap
+len=34; % spectrogram window size
+overlap=33; % spectrogram overlap
 spec_sigma=1.5; % Gaussian timescale (in ms)
 downsampling=5; % downsampling factor (skip columns)
-filter_scale=10; % disk filter scale (samples)
+filter_scale=10; % disk filter scale (samples, in spectrogram space)
 norm_amp=1; % normalize the amplitude
-lowfs=[];
-highfs=[];
+song_band=[3e3 9e3];
 
 for i=1:2:nparams
 	switch lower(varargin{i})
-		case 'n'
-			n=varargin{i+1};
+		case 'len'
+			len=varargin{i+1};
 		case 'overlap'
 			overlap=varargin{i+1};
 		case 'spec_sigma'
@@ -33,79 +32,61 @@ for i=1:2:nparams
 			downsampling=varargin{i+1};
 		case 'norm_amp'
 			norm_amp=varargin{i+1};
-		case 'lowfs'
-			lowfs=varargin{i+1};
-		case 'highfs'
-			highfs=varargin{i+1};
+		case 'song_band'
+			song_band=varargin{i+1};
 	end
 end
-
 
 % map to parameters structure
 
 PARAMETERS.normalize_amplitude=norm_amp;
-PARAMETERS.low_cutoff=lowfs;
-PARAMETERS.high_cutoff=highfs;
+PARAMETERS.song_band=song_band;
 PARAMETERS.filter_scale=filter_scale;
 PARAMETERS.spectrogram.timescale=spec_sigma;
 PARAMETERS.downsample_factor=downsampling;
-PARAMETERS.spectrogram.n=n;
+PARAMETERS.spectrogram.len=len;
 PARAMETERS.spectrogram.overlap=overlap;
 PARAMETERS.feature_names={'Cos(angle) from the reassignment vector',...
 	'dx','dy','Smoothed spectrogram'};
-	
+
+len=round((len/1e3)*FS);
+overlap=round((overlap/1e3)*FS);
+%nfft=2^nextpow2(len)
+
 % TODO remove dynamic allocation of feature matrix
 
 if norm_amp
 	s=s./max(abs(s));
 end
 
-disp('Computing score');
-t=-n/2+1:n/2;
+t=-len/2+1:len/2;
 
-spec_sigma=(spec_sigma/1000)*fs;
+spec_sigma=(spec_sigma/1000)*FS;
 
 %Gaussian and first derivative as windows.
 % let's remove redundant angles and gradients, maybe just cos
 
 w=exp(-(t/spec_sigma).^2);
 dw=(w).*((t)/(spec_sigma^2))*-2;
-q=spectrogram(s,w,overlap,n)+eps; %gaussian windowed spectrogram
-q2=spectrogram(s,dw,overlap,n)+eps; %deriv gaussian windowed spectrogram
+q=spectrogram(s,w,overlap,len)+eps; %gaussian windowed spectrogram
+q2=spectrogram(s,dw,overlap,len)+eps; %deriv gaussian windowed spectrogram
 
-[t,f]=getspecgram_dim(length(s),n,overlap,n,fs);
+[t,f]=getspecgram_dim(length(s),len,overlap,len,FS);
 
-if ~isempty(lowfs) & ~isempty(highfs)
+lowpoint=max(find(f<=song_band(1)));
+highpoint=min(find(f>=song_band(2)));
 
-	f=flipdim(f(:),1);
-
-	lowpoint=min(find(f<=lowfs));
-	highpoint=max(find(f>=highfs));
-
-	if isempty(lowpoint), lowpoint=length(f); end
-	if isempty(highpoint), highpoint=1; end
-
-else
-
-	lowpoint=480;
-	highpoint=300;
-
-	PARAMETERS.low_cutoff=f(lowpoint);
-	PARAMETERS.high_cutoff=f(highpoint);
-
-end
+if isempty(lowpoint), lowpoint=length(f); end
+if isempty(highpoint), highpoint=1; end
 
 % add FM and pitch?
 
 dx=(q2./q)/(2*pi); %displacement according to the remapping algorithm
 
-sonogram=flipdim(q,1);
-dx=flipdim(dx,1);
-
 % take subset of frequencies to focus on
 
-dx=dx(highpoint:lowpoint,:);
-sonogram=sonogram(highpoint:lowpoint,:);
+dx=dx(lowpoint:highpoint,:);
+sonogram=q(lowpoint:highpoint,:);
 
 % larger disks really slows down compute time
 
@@ -132,17 +113,19 @@ v{4}=blurredcm;
 
 [a,b]=size(v{1});
 
-for k=1:length(v)
+% downsample through summing (i.e. averaging)
+
+for i=1:length(v)
 	jj=1;
 	
 	%subsample the image by grouping columns
 
 	len=length(1:downsampling:b-downsampling);
 	
-	FEATURES{k}=zeros(size(v{k},1),len);
+	FEATURES{i}=zeros(size(v{i},1),len);
 
-	for i=1:downsampling:b-downsampling
-		FEATURES{k}(:,jj)=sum(v{k}(:,i:i+downsampling),2);
+	for j=1:downsampling:b-downsampling
+		FEATURES{i}(:,jj)=sum(v{i}(:,j:j+downsampling),2);
 		jj=jj+1;
 	end
 end

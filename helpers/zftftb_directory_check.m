@@ -5,9 +5,10 @@ if nargin<2
 end
 
 listing=dir(fullfile(DIR));
+prev_run_listing={};
 
 for i=1:length(listing)
-	if listing(i).isdir
+	if listing(i).isdir & listing(i).name~='.'
 		prev_run_listing{end+1}=listing(i).name;
 	end
 end

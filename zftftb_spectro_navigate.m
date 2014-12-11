@@ -20,8 +20,8 @@ end
 % parameters for constructing the spectrogram image
 % overlap will define time resolution for the selection
 
-len=30;
-overlap=29.5;
+len=20;
+overlap=18;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

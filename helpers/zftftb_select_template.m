@@ -6,6 +6,10 @@ if nargin<2
 	CUSTOMLOAD=[];
 end
 
+if nargin<1
+	DIR=pwd;
+end
+
 pause(.001); % inserting 1 msec pause since uigetfile does not always open without it, not sure why...
 
 response=[];
@@ -46,6 +50,3 @@ while isempty(response)
 
 	end
 end
-
-end
-

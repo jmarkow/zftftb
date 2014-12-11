@@ -1,5 +1,5 @@
 function zftftb_song_clust(DIR,varargin)
-%extracts and aligns renditions of a template along with slaved ephys
+%extracts and aligns renditions of a template
 %
 %example:
 %
@@ -26,10 +26,10 @@ function zftftb_song_clust(DIR,varargin)
 %		fs
 %		sampling rate for aligned data (25e3, default Intan)
 %
-%		min_f
+%		disp_band(1)
 %		lowermost frequency for template spectrogram (default: 1)
 %
-%		max_f
+%		disp_band(2)
 %		uppermost frequency for template spectrogram (default: 10e3)
 %		
 %		colors
@@ -63,30 +63,35 @@ function zftftb_song_clust(DIR,varargin)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-spect_thresh=.1; % deprecated, this parameter is no longer used
 colors='hot';
-min_f=1;
-max_f=10e3;
-time_range=[0 inf];
+disp_band=[1 10e3]; % spectrogram display parameters
 subset='';
 padding=[]; % padding that will be saved with the template, in seconds (relevant for the pipeline only)
    	    % two elements vector, both specify in seconds how much time before and after to extract
 	    % e.g. [.2 .2] will extract 200 msec before and after the extraction point when clustering
 	    % sounds through the pipeline
-lowfs=[];
-highfs=[];
 
 % smscore parameters, THESE MUST MATCH THE PIPELINE PARAMETERS IN EPHYS_PIPELINE.CFG, OTHERWISE
 % THE FEATURE COMPUTATION BETWEEN THE TEMPLATE AND CANDIDATE SOUNDS WILL NOT
 % BE APPROPRIATELY MATCHED
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SMSCORE PIPELINE PARAMETERS %%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SMSCORE PARAMETERS %%%%%%%%%%%%%%%%%
 
-n=1024;
-overlap=1000;
+len=34;
+overlap=33;
 filter_scale=10;
 downsampling=5;
 train_classifier=1;
+song_band=[3e3 9e3];
+
+% TODO: add option to make spectrograms and wavs of all extractions
+
+visualize=[];
+export_wav=[];
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% CLASSIFICATION FEATURES NAME %%%%%%%
+
+property_names={'cos','derivx', 'derivy', 'amp','product','curvature'}; 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETER COLLECTION  %%%%%%%%%%%%%%
@@ -99,31 +104,26 @@ end
 
 for i=1:2:nparams
 	switch lower(varargin{i})
-		case 'spect_thresh'
-			spect_thresh=varargin{i+1};
-		case 'colors'
-			colors=varargin{i+1};
-		case 'masks'
-			masks=varargin{i+1};
-		case 'time_range'
-			time_range=varargin{i+1};
-		case 'subset'
-			subset=varargin{i+1};
 		case 'padding'
 			padding=varargin{i+1};
-		case 'lowfs'
-			lowfs=varargin{i+1};
-		case 'highfs'
-			highfs=varargin{i+1};
 		case 'train_classifier'
 			train_classifier=varargin{i+1};
+		case 'len'
+			len=varargin{i+1};
+		case 'overlap'
+			overlap=varargin{i+1};
+		case 'filter_scale'
+			filter_scale=varargin{i+1};
+		case 'downsampling'
+			downsampling=varargin{i+1};
+		case 'song_band'
+			song_band=varargin{i+1};
+		case 'export_spectrogram'
+			export_spectrogram=varargin{i+1};
+		case 'export_wav'
+			export_wav=varargin{i+1};		
 	end
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% TODO features to read from config file, need to make this play nice with changes to smscore...
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DIRECTORY CHECK %%%%%%%%%%%%%%%%%%%%
 
@@ -131,8 +131,6 @@ end
 if nargin<1 | isempty(DIR)
 	DIR=pwd;
 end
-
-prev_run_listing={};
 
 proc_dir=zftftb_directory_check(DIR);
 
@@ -143,57 +141,52 @@ proc_dir=zftftb_directory_check(DIR);
 
 if ~exist(fullfile(proc_dir,'template_data.mat'),'file')
 
-	template=select_template(fullfile(DIR));
+	[template.data,template.fs]=zftftb_select_template(fullfile(DIR));
 
 	% compute the features of the template
 
 	disp('Computing the spectral features of the template');
-	[template.features template.feature_parameters]=ephys_pipeline_smscore(template.data,template.fs,...
-		'n',n,'overlap',overlap,'filter_scale',filter_scale,'downsampling',downsampling,'lowfs',lowfs,'highfs',highfs);
+	[template.features template.feature_parameters]=zftftb_song_score(template.data,template.fs,...
+		'len',len,'overlap',overlap,'filter_scale',filter_scale,'downsampling',downsampling,'song_band',song_band);
 	save(fullfile(proc_dir,'template_data.mat'),'template','padding');
 
+	template_fig=figure('Visible','off');
+	[template_image,f,t]=zftftb_pretty_sonogram(template.data,template.fs,'len',35,'overlap',34.9,'filtering',300);
+
+	startidx=max([find(f<=disp_band(1));1]);
+
+	if isempty(startidx)
+		startidx=1;
+	end
+
+	stopidx=min([find(f>=disp_band(2));length(f)]);
+
+	if isempty(stopidx)
+		stopidx=length(f);
+	end
+
+	imagesc(t,f(startidx:stopidx),template_image(startidx:stopidx,:));
+	set(gca,'ydir','normal');
+
+	xlabel('Time (in s)');
+	ylabel('Fs');
+	colormap(colors);
+	multi_fig_save(template_fig,proc_dir,'template','png');
+
+	close([template_fig]);
+
 else
+
 	disp('Loading stored template...');
 	load(fullfile(proc_dir,'template_data.mat'),'template');
-	
-	disp('Computing the spectral features of the template');
-	[template.features template.feature_parameters]=ephys_pipeline_smscore(template.data,template.fs,...
-		'n',n,'overlap',overlap,'filter_scale',filter_scale,'downsampling',downsampling,'lowfs',lowfs,'highfs',highfs);
-	save(fullfile(proc_dir,'template_data.mat'),'template','padding');
+	save(fullfile(proc_dir,'template_data.mat'),'padding','-append'); % append in case we change padding
 
 end
 
 % generate a nice sonogram of the selected template
 
-template_fig=figure('Visible','off');
-[template_image,f,t]=zftftb_pretty_sonogram(template.data,template.fs,'N',1024,'overlap',1000,'low',1);
 
-startidx=max([find(f<=min_f);1]);
-
-if isempty(startidx)
-	startidx=1;
-end
-
-stopidx=min([find(f>=max_f);length(f)]);
-
-if isempty(stopidx)
-	stopidx=length(f);
-end
-
-imagesc(t,f(startidx:stopidx),template_image(startidx:stopidx,:));
-set(gca,'ydir','normal');
-
-xlabel('Time (in s)');
-ylabel('Fs');
-colormap(colors);
-multi_fig_save(template_fig,proc_dir,'template','png');
-
-close([template_fig]);
-
-% get the template size so we can extract hits of the same size
-
-[junk,templength]=size(template.features{1});
-templength=templength-1;
+act_templatesize=length(template.data);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% GET DIFFERENCE SCORES %%%%%%%%%%%%%%
@@ -224,52 +217,24 @@ if ~skip
 
 	% collect all of the relevant .mat files
 
-	pre_files_to_proc=dir(fullfile(DIR,'*.mat'));
-
-	for i=1:length(pre_files_to_proc)
-
-		if ~isempty(findstr('match_scores.mat',pre_files_to_proc(i).name))
-			continue;
-		end
-
-		files_to_proc{i}=fullfile(DIR,pre_files_to_proc(i).name);
-	end
-
 	disp('Computing features for all sounds...');
-
-	sound_file_features(DIR,files_to_proc,n,overlap,filter_scale,downsampling,lowfs,highfs);
+	zftftb_batch_features(DIR,'len',len,'overlap',overlap,...
+		'filter_scale',filter_scale,'downsampling',downsampling,...
+		'song_band',song_band);
 
 	disp('Comparing sound files to the template (this may take a minute)...');
+	[hits.locs,hits.features,hits.file_list]=zftftb_template_match(template.features,DIR);
 
-	% take a subset if the user has passed the option
-	%
+	% convert hit locations to points in file
 	
-	if length(subset)==1
-		disp(['Will use ' num2str(subset*100) '% of the available files']);
-		%selection=randsample(1:length(files_to_proc),floor(length(files_to_proc)*subset));
-		%selection=sort(selection);
-		selection=round(linspace(1,length(files_to_proc),...
-			floor(length(files_to_proc)*subset)));
-		files_to_proc=files_to_proc(selection);
-	elseif length(subset>1)
-		disp('Will use the user provided subset');
 
-		subset(subset>length(files_to_proc))=[];
-		files_to_proc=files_to_proc(subset);
-	end
+	save(fullfile(proc_dir,'cluster_data.mat'),'hits');
 
-	template_match(template.features,files_to_proc,fullfile(proc_dir,'cluster_data.mat'),templength);
-
+else
+	load(fullfile(proc_dir,'cluster_data.mat'),'hits');
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% CLUSTERING GUI %%%%%%%%%%%%%%%%%%%%%
 
-% TODO update cluster gui so that it has parity with the spike sorting GUI (more advanced)
-
-
-property_names={'cos','derivx', 'derivy', 'amp','product','curvature'};
-save(fullfile(proc_dir,'cluster_data.mat'),'property_names','proc_dir','-append');
 
 % do we need to cluster again?
 
@@ -291,29 +256,97 @@ if exist(fullfile(proc_dir,'cluster_results.mat'),'file')
 	end
 end
 
+% collect features into matrix, make sure we can map it back to cell
+
+total_peaks=sum(cellfun(@length,hits.locs));
+non_empty=find(cellfun(@length,hits.locs)>0);
+nfeatures=size(hits.features{non_empty(1)},2);
+
+feature_matrix=zeros(total_peaks,nfeatures);
+file_id=zeros(total_peaks,1);
+peak_order=zeros(total_peaks,1);
+
+counter=1;
+
+for i=1:length(hits.features)
+	
+	if isempty(hits.features)
+		continue;
+	end
+
+	for j=1:size(hits.features{i},1)
+		feature_matrix(counter,:)=hits.features{i}(j,:);
+		file_id(counter)=i;
+		peak_order(counter)=j;
+		counter=counter+1;
+	end
+end
 
 if ~skip
-	uiwait(new_data_plotter(fullfile(proc_dir,'cluster_data.mat'),fullfile(proc_dir,'cluster_results.mat')));
+	% concatenate features, pass to cluster cut	
+	
+	[~,labels,selection]=markolab_clust_cut(feature_matrix,property_names);
+
+	% now each row of feature matrix correspond to file id, which corresponds to file list (phew)
+
+	save(fullfile(proc_dir,'cluster_results.mat'),'labels','selection');	
+else
+	load(fullfile(proc_dir,'cluster_results.mat'),'labels','selection');
 end
 
-load(fullfile(proc_dir,'cluster_results.mat'),'sorted_syllable','syllable_data','cluster');
-load(fullfile(proc_dir,'cluster_data.mat'),'filenames');
-
-if train_classifier
-
-	disp('Training classifier on your selection...');
-
-	% fix for MATLAB 2010a complaining about too many iterations...enforce that method=smo
-	% switched to quadratic kernel function 5/28/13, linear was found to be insufficient in edge-cases
-
-	cluster_choice=cluster.choice;
-
-	classobject=svmtrain(syllable_data(:,[1:6]),cluster.labels,'method','smo','kernel_function','quadratic');
-	save(fullfile(proc_dir,'classify_data.mat'),'classobject','cluster_choice');
-
+if isempty(padding)
+	padding=zeros(1,2);
+else
+	padding=round(padding.*template.fs);
 end
 
-act_templatesize=length(template.data);
+len=round((len/1e3)*template.fs);
+overlap=round((overlap/1e3)*template.fs);
+stepsize=len-overlap;
+
+select_idx=(labels==selection);
+
+for i=1:length(hits.locs)
+
+	% get the indices for this file
+
+	tmp=select_idx(file_id==i);
+	tmp2=peak_order(file_id==i);
+
+	% ensure ordering is correct
+
+	tmp=tmp(tmp2);
+
+	% delete peaks that were not selected
+
+	hits.locs{i}(tmp==0)=[];
+
+end	
+
+for i=1:length(hits.locs)
+	hits.ext_pts{i}(:,1)=round(((hits.locs{i}-1)*stepsize*downsampling)-padding(1));
+	hits.ext_pts{i}(:,2)=hits.ext_pts{i}(:,1)+act_templatesize+padding(2)*2;
+end
+
+
+%% train an SVM to use for classifying new sounds, easily swap in other classifiers
+%
+%if train_classifier
+%
+%	disp('Training classifier on your selection...');
+%
+%	% fix for MATLAB 2010a complaining about too many iterations...enforce that method=smo
+%	% switched to quadratic kernel function 5/28/13, linear was found to be insufficient in edge-cases
+%
+%	cluster_choice=cluster.choice;
+%
+%	% quadratic boundaries work the best in this situation
+%
+%	classobject=svmtrain(syllable_data(:,[1:6]),cluster.labels,'method','smo','kernel_function','quadratic');
+%	save(fullfile(proc_dir,'classify_data.mat'),'classobject','cluster_choice');
+%
+%end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% HIT EXTRACTION %%%%%%%%%%%%%%%%%%%%%
@@ -333,468 +366,16 @@ if exist(fullfile(proc_dir,'extracted_data.mat'),'file')
 				skip=1;
 			otherwise
 				response=[];
-		end
-	end
-end
-
-
-if ~skip
-	[agg_audio agg_ephys agg_ttl used_filenames]=extract_hits(sorted_syllable,filenames,...
-		act_templatesize,spect_thresh,time_range,n,overlap,downsampling,padding);
-
-	disp(['Saving data to ' fullfile(proc_dir,'extracted_data.mat')]);
-
-	save(fullfile(proc_dir,'extracted_data.mat'),'used_filenames','agg_audio','agg_ephys','agg_ttl','used_filenames','-v7.3');
-end
-
-
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%
-
-% function to compute the spectral features for all the pertinent wav files
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% COMPUTE FEATURES %%%%%%%%%%%%%%%%%%%
-
-
-function sound_file_features(DIR,SOUND_FILES,N,OVERLAP,FILTER_SCALE,DOWNSAMPLING,LOWFS,HIGHFS)
-
-par_save = @(FILE,features,parameters,TTL) save([FILE],'features','parameters','TTL');
-
-if ~exist(fullfile(DIR,'syllable_data'),'dir')
-	mkdir(fullfile(DIR,'syllable_data'));
-end
-
-parfor i=1:length(SOUND_FILES)
-
-	input_file=SOUND_FILES{i};
-	disp([input_file])
-
-	[path,name,ext]=fileparts(input_file);
-	output_file=fullfile(DIR,'syllable_data',[ name '_score.mat']);
-
-	if exist(output_file,'file'), continue; end
-
-	disp(['Computing features for ' input_file]);
-
-	% simply read in the file and score it
-
-	% getfield hack to get around parfor errors
-
-	is_legacy=check_legacy(input_file);
-	
-	if is_legacy
-		proc=load(input_file,'mic_data','fs');
-		proc.audio.data=mic_data;
-		proc.audio.fs=fs;
-	else
-		proc=load(input_file,'audio');
-	end
-	
-	if ~isfield(proc,'audio')
-		warning('ephysPipeline:ephysCluster:errorsoundfile','Problem encountered with %s',input_file);
-		continue;
-	end
-	
-	if length(proc.audio.data)<N
-		warning('ephysPipeline:ephysCluster:shortsound','Sound extraction too short in %s, skipping...',input_file);
-		continue;
-	end
-
-	[sound_features,parameters]=ephys_pipeline_smscore(proc.audio.data,proc.audio.fs,...
-		'n',N,'overlap',OVERLAP,'filter_scale',FILTER_SCALE,'downsampling',DOWNSAMPLING,'lowfs',LOWFS,'highfs',HIGHFS);
-
-	% save for posterity's sake
-
-	if ~isempty(LOWFS) & ~isempty(HIGHFS)
-		TTL=1;
-	else
-		TTL=0;
-	end
-
-	par_save(output_file,sound_features,parameters,TTL);
-
-end
-
-end
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% COMPARE FEATURES WITH TEMPLATE %%%%%
-
-
-function template_match(TEMPLATE,TARGET_FILES,SAVEFILE,TEMPLATESIZE)
-
-% do the template matching here...
-
-%disp('Comparing the target sounds to the template...');
-
-
-parfor i=1:length(TARGET_FILES)
-
-	% load the features of the sound data
-
-	target=[];
-
-	[path,name,ext]=fileparts(TARGET_FILES{i});
-
-	input_file=fullfile(path,'syllable_data',[ name '_score.mat']);	
-	
-	try
-		target=getfield(load(input_file,'features'),'features');
-	catch
-		warning('ephysPipeline:ephysCluster:errortemplatefile','Troubling reading %s',input_file);
-		continue;
-	end
-
-	[junk,targetlength]=size(target{1});
-
-	score_temp={};
-	temp_mat=[];
-
-	disp([TARGET_FILES{i}])
-
-	for j=1:length(target)
-
-		%template=TEMPLATE{j}-median(TEMPLATE{j});
-		%template=template./mad(template);
-
-		%targ=target{j}-median(target{j});
-		%targ=target{j}./mad(target{j});
-
-		template=TEMPLATE{j};
-		targ=target{j};
-		score_temp{j}=zeros(1,targetlength-TEMPLATESIZE);
-
-		for k=1:targetlength-TEMPLATESIZE
-			score_temp{j}(k)=[sum(sum(abs(targ(:,k:k+TEMPLATESIZE)-template)))];
-		end
-
-		score_temp{j}=score_temp{j}-mean(score_temp{j});
-		score_temp{j}=score_temp{j}/std(score_temp{j});
-		score_temp{j}(score_temp{j}>0)=0;
-		score_temp{j}=abs(score_temp{j});
-
-	end
-
-	attributes=length(score_temp);
-	product_score=score_temp{1};
-	
-	for j=2:attributes, product_score=product_score.*score_temp{j}; end
-
-	if length(product_score)<3
-		variableCellArray{i}=temp_mat;
-		peakLocation{i}=[];
-		continue;
-	end
-	
-	warning('off','signal:findpeaks:largeMinPeakHeight');
-
-	[pks,locs]=findpeaks(product_score,'MINPEAKHEIGHT',.005);
-	warning('on','signal:findpeaks:largeMinPeakHeight');
-	
-	if isempty(locs)
-		variableCellArray{i}=temp_mat;
-		peakLocation{i}=[];
-		continue; 
-	end
-
-	curvature=gradient(gradient(product_score));
-
-	for j=1:attributes, temp_mat(:,j)=log(score_temp{j}(locs)); end
-
-	temp_mat(:,attributes+1)=log(product_score(locs));
-	temp_mat(:,attributes+2)=log(abs(curvature(locs)));
-
-	peakLocation{i}=locs;
-	variableCellArray{i}=temp_mat;
-
-end
-
-warning('on','signal:findpeaks:largeMinPeakHeight');
-filenames=TARGET_FILES;
-
-empty_coords=find(cellfun(@isempty,variableCellArray));
-variableCellArray(empty_coords)=[];
-peakLocation(empty_coords)=[];
-filenames(empty_coords)=[];
-
-disp([length(variableCellArray)]);
-
-save(SAVEFILE,'variableCellArray','peakLocation','filenames');
-
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-%%%% the grand finale, extract the data!
-
-% need to adapt to grab aligned sound data in a sample x trials matrix
-% and a cell array of matrices for the Intan data (aligned for each electrodes)
-%
-%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DATA EXTRACTION %%%%%%%%%%%%%%%%%%%%
-
-
-function [MIC EPHYS TTL USED_FILENAMES]=extract_hits(SELECTED_PEAKS,FILENAMES,TEMPLATESIZE,SPECT_THRESH,TIME_RANGE,...
-		N,OVERLAP,DOWNSAMPLING,PADDING)
-
-TEMPLATESIZE=TEMPLATESIZE+N;
-USED_FILENAMES={};
-
-MIC=[];
-TTL=[];
-EPHYS=[];
-
-disp(['Extracting cluster (' num2str(length(SELECTED_PEAKS)) ' peaks):   ']);
-disp('Preallocating matrices (this may take a minute)...');
-
-[nblanks formatstring]=progressbar(100);
-counter=0;
-
-% check for all possible channels across the whole day, a matrix will be filled with zeros if the channel
-% gets knocked out somehow...
-
-all_labels=[];
-all_ports=[];
-
-% in case we have no ephys or ttl data
-%
- 
-ephys.labels=[];
-ephys.ports=[];
-ephys.fs=[];
-ephys.data=[];
-ttl.data=[];
-ttl.fs=[];
-
-for i=1:length(SELECTED_PEAKS)
-
-	is_legacy=check_legacy(FILENAMES{i});
-
-	if is_legacy		
-		load(FILENAMES{i},'channels');
-		labels=channels;
-		ports=repmat('A',[1 length(channels)]);
-	else
-		load(FILENAMES{i},'ephys');
-
-		labels=ephys.labels;	
-		ports=ephys.ports;
-	end	
-
-	for j=1:length(labels)
-
-		label_chk=labels(j)==all_labels;
-		port_chk=ports(j)==all_ports;
-
-		if isempty(label_chk), label_chk=0; end
-		if isempty(port_chk), port_chk=0; end
-
-		% loop and if any channels are not included in the channel_label vector, include!
-
-		if ~any(label_chk&port_chk)
-			all_labels=[all_labels labels(j)];
-			all_ports=[all_ports ports(j)];
-		end
-
-	end
-
-end
-
-disp(['Found channels:  ']);
-
-for i=1:length(all_labels)
-	fprintf(1,'%i%s ',all_labels(i),all_ports(i));
-end
-
-fprintf(1,'\n');
-
-parfor i=1:length(SELECTED_PEAKS)
-
-	if length(SELECTED_PEAKS{i})<1
-		continue;
-	end
-
-	is_legacy=check_legacy(FILENAMES{i});
-
-	if is_legacy
-
-		data=load(FILENAMES{i},'mic_data','fs');
-
-		data.audio.data=mic_data;
-		data.audio.fs=fs;
-
-		data=rmfield(data,'mic_data');
-
-	else
-		data=load(FILENAMES{i},'audio');
-	
-	end	
-
-	for j=1:length(SELECTED_PEAKS{i})
-		
-		peakLoc=SELECTED_PEAKS{i}(j);
-
-		% the startpoint needs to be adjusted using the following formula
-		% peaklocation*(WINDOWLENGTH-OVERLAP)*SUBSAMPLING-WINDOWLENGTH
-
-		startpoint=(peakLoc*(N-OVERLAP)*DOWNSAMPLING)-N;
-		endpoint=startpoint+TEMPLATESIZE;
-
-		if startpoint/data.audio.fs>=TIME_RANGE(1) & endpoint/data.audio.fs<=TIME_RANGE(2)
-
-			if length(data.audio.data)>endpoint && startpoint>0	
-				counter=counter+1;
 			end
-
 		end
 	end
-end
 
-disp(['Found ' num2str(counter) ' trials ']);
 
-%%%%
-
-if is_legacy
-	load(FILENAMES{1},'fs','ttl_data');
-	audio.fs=fs;
-	ephys.fs=fs;
-
-	if ~exist('ttl','var')
-		ttl_data=[];
+	if ~skip
+		[agg_audio used_filenames]=zftftb_extract_hits(hits.ext_pts,hits.file_list);
+		disp(['Saving data to ' fullfile(proc_dir,'extracted_data.mat')]);
+		save(fullfile(proc_dir,'extracted_data.mat'),'agg_audio','used_filenames','-v7.3');
 	end
 
-else
-	load(FILENAMES{1},'audio','ephys','ttl');
-end	
-
-EPHYS.data=zeros(TEMPLATESIZE+1,counter,length(all_labels),'single');
-EPHYS.fs=ephys.fs;
-MIC.data=zeros(TEMPLATESIZE+1,counter,'single');
-MIC.fs=audio.fs;
-
-if ~isempty(ttl.data)
-	TTL.data=zeros(TEMPLATESIZE+1,counter,'single');
-else
-	TTL.data=[];
-end
-
-TTL.fs=ephys.fs;
-
-EPHYS.labels=all_labels;
-EPHYS.ports=all_ports;
-
-disp('Extracting data');
-fprintf(1,['Progress:  ' blanks(nblanks)]);
-
-trial=1;
-eflag=1;
-tflag=1;
-
-for i=1:length(SELECTED_PEAKS)
-
-	fprintf(1,formatstring,round((i/length(SELECTED_PEAKS))*100));
-
-	if length(SELECTED_PEAKS{i})<1
-		continue;
-	end
-
-	is_legacy=check_legacy(FILENAMES{i});
-
-	if is_legacy
-
-		load(FILENAMES{i},'mic_data','fs','ephys_data','channels','ttl_data');
-		
-		audio.data=single(mic_data);
-		audio.fs=fs;
-
-		ephys.data=ephys_data;
-		ephys.labels=channels;
-		ephys.fs=fs;
-
-		if ~exist('ttl_data','var')
-			ttl_data=zeros(size(ephys_data));
-		else
-			ttl.data=ttl_data;
-			ttl.fs=fs;
-		end
-
-		clearvars mic_data fs ephys_data channels;
-
-	else
-		load(FILENAMES{i},'audio','ephys','ttl');
-	end	
-
-	if ~exist('ephys','var')
-		eflag=0;
-	end
-
-	if ~exist('ttl','var')
-		tflag=0;
-	end
-
-	if audio.fs~=ephys.fs & eflag
-		error('Audio (%g) and ephys (%g) sampling rates are not equal for file %s',...
-			audio.fs,ephys.fs,FILENAMES{i});
-	end
-	
-	for j=1:length(SELECTED_PEAKS{i})
-		
-		peakLoc=SELECTED_PEAKS{i}(j);
-
-		% the startpoint needs to be adjusted using the following formula
-		% peaklocation*(WINDOWLENGTH-OVERLAP)*SUBSAMPLING-WINDOWLENGTH
-
-		startpoint=(peakLoc*(N-OVERLAP)*DOWNSAMPLING)-N;
-		endpoint=startpoint+TEMPLATESIZE;
-
-		if startpoint/audio.fs>=TIME_RANGE(1) & endpoint/audio.fs<=TIME_RANGE(2)
-
-			if length(audio.data)>endpoint && startpoint>0
-
-				USED_FILENAMES{end+1}=FILENAMES{i};
-                		MIC.data(:,trial)=single(audio.data(startpoint:endpoint));               
-              
-				if ~isempty(ttl.data) & tflag
-					TTL.data(:,trial)=single(ttl.data(startpoint:endpoint));
-				end
-
-				% if we have differences in channel number, how to resolve?
-
-				if ~eflag
-					continue;
-				end
-				
-				for k=1:length(ephys.labels)
-                    
-					label_chk=ephys.labels(k)==all_labels;
-					port_chk=ephys.ports(k)==all_ports;
-
-					ch_idx=find(label_chk&port_chk);
-
-					EPHYS.data(:,trial,ch_idx)=single(ephys.data(startpoint:endpoint,k));
-
-				end
-
-				trial=trial+1;
-
-			end
-
-		end
-	end
-end
-
-fprintf('\n');
 
 end
-
