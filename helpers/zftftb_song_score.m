@@ -71,7 +71,7 @@ dw=(w).*((t)/(spec_sigma^2))*-2;
 q=spectrogram(s,w,overlap,len)+eps; %gaussian windowed spectrogram
 q2=spectrogram(s,dw,overlap,len)+eps; %deriv gaussian windowed spectrogram
 
-[t,f]=getspecgram_dim(length(s),len,overlap,len,FS);
+[t,f]=zftftb_specgram_dim(length(s),len,overlap,len,FS);
 
 lowpoint=max(find(f<=song_band(1)));
 highpoint=min(find(f>=song_band(2)));
