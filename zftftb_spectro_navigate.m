@@ -56,14 +56,14 @@ while isempty(EXTRACTED_SOUND)
 
 	if rect_position(1)<1, rect_position(1)=1; end
 	
-	selected_width=rect_position(1)+rect_position(3);
+	selected_width=round(rect_position(1)+rect_position(3));
 
 	if selected_width>width, selected_width=width; end
 
 	EXTRACTED_IMAGE=sonogram_im(:,rect_position(1):selected_width);	
 	
-	TIME_POINTS=t(rect_position(1):selected_width)
-	extract_idxs=round([TIME_POINTS(1)*FS TIME_POINTS(end)*FS])
+	TIME_POINTS=t(rect_position(1):selected_width);
+	extract_idxs=round([TIME_POINTS(1)*FS TIME_POINTS(end)*FS]);
 
 	temp_fig=figure('Toolbar','None','Menubar','None');imshow(uint8(EXTRACTED_IMAGE),hot);
 	
