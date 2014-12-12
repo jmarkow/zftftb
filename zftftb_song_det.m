@@ -20,6 +20,7 @@ overlap=0; % overlap (s)
 song_duration=.8; % smoothing (s) 
 ratio_thresh=2; % ratio song:nonsong
 pow_thresh=.05; % power threshold (au)
+song_thresh=.2; % song threshold
 
 for i=1:2:nparams
 	switch lower(varargin{i})
