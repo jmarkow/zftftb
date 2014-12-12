@@ -165,7 +165,7 @@ if ~exist(fullfile(proc_dir,'template_data.mat'),'file')
 	xlabel('Time (in s)');
 	ylabel('Fs');
 	colormap(colors);
-	multi_fig_save(template_fig,proc_dir,'template','png');
+	markolab_multi_fig_save(template_fig,proc_dir,'template','png');
 
 	close([template_fig]);
 
