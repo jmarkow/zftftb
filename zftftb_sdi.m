@@ -1,29 +1,69 @@
 function [SDI F T]=zftftb_sdi(MIC_DATA,FS,varargin)
-%computes a contour histogram (or spectral density image, SDI) for a group of sounds
+%zftftb_sdi computes a contour histogram (or spectral density image, SDI) for a group of sounds
 %
 %	HISTOGRAM=zftftb_sdi(MIC_DATA,varargin)
 %
 %	MIC_DATA
 %	samples x trials matrix of aligned sounds
-%	
+%
+%	FS
+%	sampling frequency (default: 48e3)
+%
 %	the following may be specified as parameter/value pairs:%
 %		
-%		FS
-%		sampling frequency (default: 25e3)
-%
 %		tscale
 %		time scale for Gaussian window for the Gabor transform (in ms, default: 1.5)
 %	
-%		n
-%		window length
+%		len
+%		fft window length (in ms, default: 34)
 %
 %		nfft
-%		number of points in fft
+%		number of points in fft (in ms, default: 34)
 %
 %		overlap
-%		window overlap
+%		window overlap (in ms, default: 33)
 %
+%		filtering
+%		high-pass audio signals (corner Fs in Hz, default: 500)
 %
+%		norm_amp
+%		normalize microphone amplitude to 1 (default: 1)
+%
+%		weighting
+%		contour weighting ('log' for log-power,'lin' for linear power,'none' for none,
+%		default: 'log')
+%
+%		weighting_thresh
+%		weighting threshold (only include contours with weights>=weighting_thresh, default:
+%		.75)
+%
+%	the program returns:
+%
+%		SDI
+%		structure with real and imaginary contour SDIs (re and im, respectively)
+%
+%		F
+%		vector with SDI frequencies
+%
+%		T
+%		vector with time points (in s)
+%
+%	example:
+%
+%	To take a sample x trials matrix (double) of aligned microphone traces with a 24 kHz 
+%	sampling rate and generate the SDI run,
+%
+%	[sdi f t]=zftftb_sdi(mic_signals,24e3);
+%
+%	Then to plot the resulting SDI (imaginary contours)
+%
+%	figure();imagesc(t,f,sdi.im);
+%	axis xy
+%
+%	Values in the SDI represent the probability of a contour passing through that time-frequency
+%	point
+%
+%	See also zftftb_contour_approx.m
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETER COLLECTION %%%%%%%%%%%%%%%%%
 
@@ -129,6 +169,9 @@ for i=1:ntrials
 			weights=weights./max(weights(:));
 		case 'lin'
 			weights=abs(spect);
+		case 'none'
+			weights=ones(size(rmask_pre));
+			spect_thresh=0;
 		otherwise
 			error('Did not understand weighting.');
 	end
@@ -136,13 +179,8 @@ for i=1:ntrials
 	re_contours(:,:,i)=uint8(rmask_pre);
 	im_contours(:,:,i)=uint8(imask_pre);
 
-	if mask_only
-		RMASK=RMASK+rmask_pre./ntrials;
-		IMASK=IMASK+imask_pre./ntrials;
-	else
-		RMASK=RMASK+(((rmask_pre.*weights)>spect_thresh))./ntrials;
-		IMASK=IMASK+(((imask_pre.*weights)>spect_thresh))./ntrials;
-	end
+	RMASK=RMASK+(((rmask_pre.*weights)>spect_thresh))./ntrials;
+	IMASK=IMASK+(((imask_pre.*weights)>spect_thresh))./ntrials;
 
 end
 
@@ -155,7 +193,6 @@ len=round((len/1e3)*FS);
 overlap=round((overlap/1e3)*FS);
 
 % shamelessly cribbed from MATLAB's computation for spectrogram
-
 % should scale 1:fbins * nyquist
 
 F=((1:rows)./rows).*(FS/2);

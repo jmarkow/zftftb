@@ -1,52 +1,27 @@
 function zftftb_song_clust(DIR,varargin)
 %extracts and aligns renditions of a template
 %
-%example:
-%
-%ephys_cluster(pwd)
-%
-%First the script prompts the user to create a directory or continue a
-%previous run, then
-%the user selects a .mat file that contains the template vocalization and is prompted to 
-%draw a bounding box around the template.  All of the sound files in the same directory
-%are checked for spectral similarity to the template, and the user then manually cuts clusters
-%to choose the cluster of sounds similar to the template (the cluster with a mean highest score
-%in the feature dimensions is the likeliest candidate).  Finally, the cluster is saved to 
-%a directory specified by the user in extracted_data.mat.  The results can be visualized with
-%ephys_visual_mua.m (for multi-unit data).
-%
-%
-%	ephys_cluster(DIR,varargin)
-%	
+%	zftftb_song_clust(pwd)
+
 %	DIR
 %	directory that contains the extracted files (default: pwd)
 %
 %	the following may be specified as parameter/value pairs:
 %
-%		fs
-%		sampling rate for aligned data (25e3, default Intan)
 %
 %		disp_band(1)
-%		lowermost frequency for template spectrogram (default: 1)
-%
-%		disp_band(2)
-%		uppermost frequency for template spectrogram (default: 10e3)
 %		
 %		colors
 %		colormap for template spectrogram (default: hot)
 %
 %		padding
-%		only relevant if you are using ephys_cluster to generate a template
-%		for the pipeline, this will force the standalone sound clustering
-%		daemon to add a pad before and after an extraction (two element vector
-%		for seconds before and after extractions, in seconds)
+%		padding to the left/right of extractions (two element vector in s, default: [])	
 %
-%		n
-%		spectral feature score spectrogram window, if you are using the pipeline
-%		this MUST match the pipeline parameters in ephys_pipeline.cfg (default: 1024)
+%		len
+%		spectral feature score spectrogram window (in ms, default: 34)
 %
 %		overlap
-%		spectral feature score spectrogram overlap, must match ephys_pipeline.cfg (default: 1000)
+%		spectral feature score spectrogram overlap (in ms, default: 33)
 %
 %		filter_scale
 %		spectral feature score smoothing window size, must match ephys_pipeline.cfg (default: 10)
@@ -54,12 +29,12 @@ function zftftb_song_clust(DIR,varargin)
 %		downsampling
 %		spectral feature downsampling factor, must match ephys_pipeline.cfg (default: 5)
 %
+%		song_band
+%		frequency band to compute song features over (in Hz, default: [3e3 9e3])
 %
 %
-%see also songdet.m,ephys_visual_mua.m,ephys_visual_sua.m,ephys_pipeline_smscore.m
-
-% TODO: remove all unecessary stuff, make extraction routine more extensible
-% TODO: if data in MATLAB file, use custom loading function
+%
+%See also zftftb_song_score.m, zftftb_pretty_sonogram.m
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

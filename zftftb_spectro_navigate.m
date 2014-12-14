@@ -1,12 +1,24 @@
-function [EXTRACTED_SOUND,EXTRACTED_IMAGE,TIME_POINTS]=markolab_spectro_navigate(DATA,FS)
-%simple GUI for selecting a sound using its spectrogram
+function [EXTRACTED_SOUND,EXTRACTED_IMAGE,TIME_POINTS]=zftftb_spectro_navigate(DATA,FS)
+%simple GUI for selecting time points in sound data based on the spectrogram
 %
-%	[EXTRACTED_SOUND,EXTRACTED_IMAGE]=spectro_navigate(DATA,DIR)
+%	[EXTRACTED_SOUND,EXTRACTED_IMAGE]=zftftb_spectro_navigate(DATA,FS)
 %
+%	DATA
+%	sound data
 %
-% DIR
-% if given then brings up an interface to select a particular file
+%	FS
+%	sampling rate
 %
+%the program returns the following output:
+%	
+%	EXTRACTED_SOUND
+%	the selected sound data
+%
+%	EXTRACTED_IMAGE
+%	the selected segment of the spectrogram
+%
+%	TIME_POINTS
+%	two element vector indicating the left/right edges of the selected segment
 %
 %
 
@@ -28,6 +40,7 @@ overlap=18;
 DATA=DATA./abs(max(DATA));
 
 % sampling rate doesn't matter here at all, just using a dummy value, 48e3
+% TODO: first double click to place rectangle to prevent too much scrolling
 
 [sonogram_im,f,t]=zftftb_pretty_sonogram(DATA,FS,'len',len,'overlap',overlap,'clipping',-5,'filtering',300);
 sonogram_im=flipdim(sonogram_im,1)*62;

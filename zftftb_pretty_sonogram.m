@@ -1,9 +1,51 @@
-function [IMAGE,F,T]=pretty_sonogram(SIGNAL,FS,varargin)
-%simple 2-taper histogram (Gauss and DGauss)
+function [IMAGE,F,T]=zftftb_pretty_sonogram(SIGNAL,FS,varargin)
+%zftftb_pretty_sonogram computes a simple 2-taper spectrogram using the 
+%Gauss window and derivative of Gauss (the basis for reassignment). 
 %
+%	zftftb_pretty_sonogram(SIGNAL,FS,varargin)
 %
+%	SIGNAL
+%	vector with microphone data (double)
 %
+%	FS
+%	sampling rate (default: 48e3)
 %
+%	the following may be passed as parameter/value pairs:
+%
+%		tscale
+%		time scale for Gaussian window for the Gabor transform (in ms, default: 1.5)
+%	
+%		len
+%		fft window length (in ms, default: 34)
+%
+%		nfft
+%		number of points in fft (in ms, default: 34)
+%
+%		overlap
+%		window overlap (in ms, default: 33)
+%
+%		filtering
+%		high-pass audio signals (corner Fs in Hz, default: 500)
+%
+%		norm_amp
+%		normalize microphone amplitude to 1 (default: 1)
+%
+%		zeropad
+%		zeropadding of the signal ([] for none, 0 to set to len/2, >0 for zeropad, 
+%		default: [])
+%
+%		postproc
+%		enable post-processing of spectrogram image ('y' or 'n', default: 'y')
+%
+%		clipping
+%		postproc only, clip the log-amplitude of the spectrogram at this value (default: -2)
+%
+%		saturation
+%		postproc only, image saturation (0-1, default: .8)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETER COLLECTION %%%%%%%%%%%%%%%%%
+
+nparams=length(varargin);
 
 if nargin<2 | isempty(FS)
 	disp('Setting FS to default: 48e3');
@@ -14,7 +56,6 @@ overlap=67; % window overlap (ms)
 tscale=2; % gauss timescale (ms)
 len=70; % window length (ms)
 postproc='y'; % postprocessing
-nparams=length(varargin);
 nfft=[];
 zeropad=[];
 norm_amp=1; % normalize amplitude?
@@ -55,6 +96,9 @@ for i=1:2:nparams
 		otherwise
 	end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 len=round((len/1e3)*FS);
 overlap=round((overlap/1e3)*FS);

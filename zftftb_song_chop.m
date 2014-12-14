@@ -1,6 +1,58 @@
-function zftftb_batch_features(DIR,varargin)
+function zftftb_song_chop(DIR,varargin)
+%zftftb_song_chop takes a directory of wav files, and extracts all segments of the wav files
+%that contain sound.  Useful in cases where you don't care about using the silent segments.
 %
+%	zftftb_song_chop(DIR,varargin)
 %
+%	DIR
+%	directory of .wav files to process
+%
+%	the following may be passed as parameter/value pairs:
+%
+%		song_len
+%		window length for computing power band crossing (in s, default: .005)
+%
+%		song_overlap
+%		window overlap for computing power band crossing (in s, default: 0)
+%
+%		song_band
+%		frequencies that contain relevant sound (in Hz, default: [3e3 7e3])
+%
+%		song_ratio
+%		ratio of power in:out of relevant band (default: 2)
+%
+%		song_duration
+%		smoothing of song_ratio (in s, default: .8)
+%
+%		song_pow
+%		threshold on song power (default: -inf)
+%
+%		song_thresh
+%		threshold on smoothed song_ratio (default: .1)
+%	
+%		custom_load
+%		anonymous functionf or loading MATLAB data (default: '')
+%
+%		file_filt
+%		filter for file selection (default: '*.wav')
+%
+%		audio_pad
+%		data to include to the left/right of extraction points (in s, default: 1)
+%
+%		colors
+%		MATLAB colormap to use for spectrograms (default: 'hot');
+%		
+%		disp_band
+%		frequency band to display for spectrogram export (default: [1 9e3]);
+%
+%		export_wav
+%		enable wav file export (default: 1)
+%
+%		export_spectrogram
+%		enable spectrogram export (default: 1)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETER COLLECTION  %%%%%%%%%%%%%%
 
 if nargin<1 | isempty(DIR)
 	DIR=pwd;
@@ -13,7 +65,7 @@ song_overlap=0;
 song_band=[3e3 7e3];
 song_duration=.8;
 song_ratio=2;
-song_pow=.05;
+song_pow=-inf;
 song_thresh=.1;
 
 custom_load=[]; % anonymous function for reading MATLAB files
@@ -25,8 +77,6 @@ disp_band=[1 9e3];
 export_wav=1;
 export_spectrogram=1;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETER COLLECTION  %%%%%%%%%%%%%%
 
 nparams=length(varargin);
 
@@ -65,6 +115,7 @@ for i=1:2:nparams
 	end
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist(fullfile(DIR,'chop_data'),'dir')
 	mkdir(fullfile(DIR,'chop_data'));
