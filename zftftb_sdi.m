@@ -1,5 +1,7 @@
 function [SDI F T CONTOURS]=zftftb_sdi(MIC_DATA,FS,varargin)
-%zftftb_sdi computes a contour histogram (or spectral density image, SDI) for a group of sounds
+%zftftb_sdi computes a contour histogram (or spectral density image, SDI) for a group of sounds.
+%Note that this function is parfor enabled, so simply open up a matlabpool to run the calculation
+%in paralllel
 %
 %	HISTOGRAM=zftftb_sdi(MIC_DATA,varargin)
 %
@@ -9,7 +11,7 @@ function [SDI F T CONTOURS]=zftftb_sdi(MIC_DATA,FS,varargin)
 %	FS
 %	sampling frequency (default: 48e3)
 %
-%	the following may be specified as parameter/value pairs:%
+%	the following may be specified as parameter/value pairs:
 %		
 %		tscale
 %		time scale for Gaussian window for the Gabor transform (in ms, default: 1.5)
@@ -48,7 +50,7 @@ function [SDI F T CONTOURS]=zftftb_sdi(MIC_DATA,FS,varargin)
 %		T
 %		vector with time points (in s)
 %		
-%		CONTOURS
+%		contours
 %		frequency x time x trial matrix of contours
 %
 %	example:
@@ -70,6 +72,8 @@ function [SDI F T CONTOURS]=zftftb_sdi(MIC_DATA,FS,varargin)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETER COLLECTION %%%%%%%%%%%%%%%%%
 
+
+
 if nargin<2
 	disp('Setting FS to 48e3...');
 	FS=48e3;
@@ -77,6 +81,10 @@ end
 
 if nargin<1
 	error('ephysPipeline:tfhistogram:notenoughparams','Need 1 argument to continue, see documentation');
+end
+
+if isa(MIC_DATA,'single')
+	MIC_DATA=double(MIC_DATA);
 end
 
 nparams=length(varargin);
@@ -151,16 +159,23 @@ end
 
 [rows,columns]=size(rmask_pre);
 
-CONTOURS.re=zeros(rows,columns,ntrials,'uint8');
-CONTOURS.im=zeros(rows,columns,ntrials,'uint8');
+contours_re=zeros(rows,columns,ntrials,'uint8');
+contours_im=zeros(rows,columns,ntrials,'uint8');
 
-CONTOURS.re(:,:,1)=uint8(rmask_pre);
-CONTOURS.im(:,:,1)=uint8(imask_pre);
+contours_re(:,:,1)=uint8(rmask_pre);
+contours_im(:,:,1)=uint8(imask_pre);
 
 % leave user to specify number of workers
 
-for i=1:ntrials
+if strcmp(lower(weighting(1:3)),'non')
+	spect_thresh=0;
+end
 
+disp('Computing contours (go grab a coffee/beer, this will take a minute)...');
+
+parfor i=2:ntrials
+
+	weights=[];
 	[rmask_pre imask_pre spect]=zftftb_contour_approx(MIC_DATA(:,i),FS,'len',len,'overlap',overlap,'tscale',tscale,'nfft',nfft);
 
 	% log weighting
@@ -172,20 +187,27 @@ for i=1:ntrials
 			weights=weights./max(weights(:));
 		case 'lin'
 			weights=abs(spect);
-		case 'none'
+		case 'non'
 			weights=ones(size(rmask_pre));
-			spect_thresh=0;
 		otherwise
 			error('Did not understand weighting.');
 	end
 
-	CONTOURS.re(:,:,i)=uint8(rmask_pre);
-	CONTOURS.im(:,:,i)=uint8(imask_pre);
+	tmp_re=(rmask_pre.*weights)>spect_thresh;
+	tmp_im=(imask_pre.*weights)>spect_thresh;
 
-	RMASK=RMASK+(((rmask_pre.*weights)>spect_thresh))./ntrials;
-	IMASK=IMASK+(((imask_pre.*weights)>spect_thresh))./ntrials;
+	contours_re(:,:,i)=uint8(tmp_re);
+	contours_im(:,:,i)=uint8(tmp_im);
+
+	RMASK=RMASK+tmp_re/ntrials;
+	IMASK=IMASK+tmp_im/ntrials;
 
 end
+
+CONTOURS.re=contours_re;
+CONTOURS.im=contours_im;
+
+clearvars contours_re, contours_im;
 
 [rows,cols]=size(RMASK);
 
