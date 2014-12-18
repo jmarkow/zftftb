@@ -1,4 +1,4 @@
-function [SDI F T]=zftftb_sdi(MIC_DATA,FS,varargin)
+function [SDI F T CONTOURS]=zftftb_sdi(MIC_DATA,FS,varargin)
 %zftftb_sdi computes a contour histogram (or spectral density image, SDI) for a group of sounds
 %
 %	HISTOGRAM=zftftb_sdi(MIC_DATA,varargin)
@@ -47,6 +47,9 @@ function [SDI F T]=zftftb_sdi(MIC_DATA,FS,varargin)
 %
 %		T
 %		vector with time points (in s)
+%		
+%		CONTOURS
+%		frequency x time x trial matrix of contours
 %
 %	example:
 %
@@ -148,11 +151,11 @@ end
 
 [rows,columns]=size(rmask_pre);
 
-re_contours=zeros(rows,columns,ntrials,'uint8');
-im_contours=zeros(rows,columns,ntrials,'uint8');
+CONTOURS.re=zeros(rows,columns,ntrials,'uint8');
+CONTOURS.im=zeros(rows,columns,ntrials,'uint8');
 
-re_contours(:,:,1)=uint8(rmask_pre);
-im_contours(:,:,1)=uint8(imask_pre);
+CONTOURS.re(:,:,1)=uint8(rmask_pre);
+CONTOURS.im(:,:,1)=uint8(imask_pre);
 
 % leave user to specify number of workers
 
@@ -176,8 +179,8 @@ for i=1:ntrials
 			error('Did not understand weighting.');
 	end
 
-	re_contours(:,:,i)=uint8(rmask_pre);
-	im_contours(:,:,i)=uint8(imask_pre);
+	CONTOURS.re(:,:,i)=uint8(rmask_pre);
+	CONTOURS.im(:,:,i)=uint8(imask_pre);
 
 	RMASK=RMASK+(((rmask_pre.*weights)>spect_thresh))./ntrials;
 	IMASK=IMASK+(((imask_pre.*weights)>spect_thresh))./ntrials;
