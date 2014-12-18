@@ -15,11 +15,11 @@ if mod(nparams,2)>0
 end
 
 len=.005; % window length (s)
-song_band=[3e3 7e3];
+song_band=[2e3 6e3];
 overlap=0; % overlap (s)
 song_duration=.8; % smoothing (s) 
 ratio_thresh=2; % ratio song:nonsong
-pow_thresh=.05; % power threshold (au)
+pow_thresh=-inf; % power threshold (au)
 song_thresh=.2; % song threshold
 
 for i=1:2:nparams
