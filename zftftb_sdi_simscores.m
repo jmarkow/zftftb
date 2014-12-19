@@ -34,22 +34,24 @@ function [SCORES]=zftftb_sdi_simscore(CONTOUR_GROUP1,CONTOUR_GROUP2,F,T,varargin
 %
 %	example:
 %
-%	Start by computing the contour for a set of microphone signals with a sampling rate of 24 kHz
+%	Start by computing the contours for a set of microphone signals with a sampling rate of 24 kHz
 %
 %	[sdi f t contours]=zftftb_sdi(mic_signals,24e3);
 %
 %	Now you want to compare the first 100 trials with the last 100, and compare the signals
-%	between 200 and 800 msecs and 2000 and 9000 Hz
+%	between 200 and 800 msecs and 2000 and 9000 Hz using the imaginary contours
 %
 %	scores=zftftb_sdi_simscores(contours.im(:,:,1:100),contours.im(:,:,end-100:end),f,t,'time_range',[.2 .8],...
-%	'freq_range',[2e3 9e3]);
+%				    'freq_range',[2e3 9e3]);
 %
 %	The similarity scores between group 1 contours and SDI 1 (i.e. self-similarity) is scores{1,1}, then
 %	the cross-similarity between group 2 contours and SDI 1 is scores{2,1}
 %
 %	dprime=(mean(scores{1,1})-mean(scores{2,1}))./std([scores{1,1};scores{2,1}])
 %
-%	This returns a dprime-like measure to compare the difference between the first and second group
+%	This returns a dprime-like measure to compare the difference between the first and second group. Given the sensitivity 
+%	of the measure (0-.4 tends to indicate no effect, >.6 a moderate effect, >1 a strong effect).  It's advised to run a 
+%	bootstrap to determine a rigorous cutoff. 
 
 
 nparams=length(varargin);
