@@ -21,6 +21,8 @@ song_duration=.8; % smoothing (s)
 ratio_thresh=2; % ratio song:nonsong
 pow_thresh=-inf; % power threshold (au)
 song_thresh=.2; % song threshold
+songpow_thresh=.8;
+silence=0;
 
 for i=1:2:nparams
 	switch lower(varargin{i})
@@ -38,13 +40,18 @@ for i=1:2:nparams
 			song_thresh=varargin{i+1};
 		case 'pow_thresh'
 			pow_thresh=varargin{i+1};
+		case 'songpow_thresh'
+			songpow_thresh=varargin{i+1};
+		case 'silence'
+			silence=varargin{i+1};
+
 	end
 end
 
 len=round(len*FS);
 overlap=round(overlap*FS);
 
-if nargin<10 | isempty(pow_thresh)
+if isempty(pow_thresh)
     pow_thresh=0;
 end
 
@@ -68,14 +75,23 @@ song_ratio=song./nonsong;
 
 filt_size=round((FS*song_duration)/(len-overlap));
 mov_filt=ones(1,filt_size)*1/filt_size;
-song_detvec=conv(double(song_ratio>ratio_thresh),mov_filt,'same');
+
+if ~silence
+	song_detvec=conv(double(song_ratio>ratio_thresh),mov_filt,'same');
+	pow_detvec=conv(double(song>pow_thresh),mov_filt,'same');
+else
+	song_detvec=conv(double(song_ratio<ratio_thresh),mov_filt,'same');
+	pow_detvec=conv(double(song<pow_thresh),mov_filt,'same');
+end
+
 
 % where is the threshold exceeded for both the raw power and the ratio?
 
-pow_idx=song>pow_thresh;
+pow_idx=pow_detvec>songpow_thresh;
 ratio_idx=song_detvec>song_thresh;
 
 %%%%
+
 
 SONG_IDX=pow_idx&ratio_idx;
 

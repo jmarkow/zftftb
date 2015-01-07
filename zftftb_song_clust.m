@@ -288,6 +288,12 @@ for i=1:length(hits.locs)
 end	
 
 for i=1:length(hits.locs)
+	
+	if isempty(hits.locs{i})
+		hits.ext_pts{i}=[];
+		continue;
+	end
+
 	hits.ext_pts{i}(:,1)=round(((hits.locs{i}-1)*stepsize*downsampling)-padding(1));
 	hits.ext_pts{i}(:,2)=hits.ext_pts{i}(:,1)+act_templatesize+padding(2)*2;
 end
