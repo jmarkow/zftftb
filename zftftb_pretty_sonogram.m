@@ -119,7 +119,13 @@ else
 end
 
 if zeropad==0
+
+	% TODO: more accurate zero padding for end of signal (to get true zero phase spectrogram)
+
 	zeropad=round(len/2);
+	autopad=1;
+else
+	autopad=0;
 end
 
 if ~isempty(zeropad)
@@ -158,6 +164,12 @@ if lower(postproc(1))=='y'
 	IMAGE=IMAGE*saturation;
 else
 	IMAGE=(abs(S)+abs(S2))/2; 
+end
+
+% if auto zeropad, shift time vector (otherwise let the user do it)
+
+if autopad==1
+    T=T-zeropad/FS;
 end
 
 
