@@ -52,6 +52,8 @@ filter_scale=10;
 downsampling=5;
 train_classifier=0;
 song_band=[3e3 9e3];
+custom_load='';
+file_filt='*.wav';
 
 % TODO: add option to make spectrograms and wavs of all extractions
 
@@ -90,7 +92,11 @@ for i=1:2:nparams
 		case 'export_spectrogram'
 			export_spectrogram=varargin{i+1};
 		case 'export_wav'
-			export_wav=varargin{i+1};		
+			export_wav=varargin{i+1};
+		case 'custom_load'
+			custom_load=varargin{i+1};
+		case 'file_filt'
+			file_filt=varargin{i+1};
 	end
 end
 
@@ -110,7 +116,7 @@ proc_dir=zftftb_directory_check(DIR);
 
 if ~exist(fullfile(proc_dir,'template_data.mat'),'file')
 
-	[template.data,template.fs]=zftftb_select_template(fullfile(DIR));
+	[template.data,template.fs]=zftftb_select_template(fullfile(DIR),custom_load);
 
 	% compute the features of the template
 
@@ -186,7 +192,7 @@ if ~skip
 	disp('Computing features for all sounds...');
 	zftftb_batch_features(DIR,'len',len,'overlap',overlap,...
 		'filter_scale',filter_scale,'downsampling',downsampling,...
-		'song_band',song_band);
+		'song_band',song_band,'file_filt',file_filt,'custom_load',custom_load);
 
 	disp('Comparing sound files to the template (this may take a minute)...');
 	[hits.locs,hits.features,hits.file_list]=zftftb_template_match(template.features,DIR);
