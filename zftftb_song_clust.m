@@ -32,6 +32,13 @@ function zftftb_song_clust(DIR,varargin)
 %		song_band
 %		frequency band to compute song features over (in Hz, default: [3e3 9e3])
 %
+%		custom_load
+%		anonymous function that returns two outputs [data,fs]=custom_load(FILE), used for loading
+%		data from MATLAB files with custom formats
+%
+%		file_filt
+%		ls filter used to find data files (e.g. '*.wav' for all wav files '*.mat' for all mat)
+%
 %
 %
 %See also zftftb_song_score.m, zftftb_pretty_sonogram.m
@@ -195,7 +202,7 @@ if ~skip
 		'song_band',song_band,'file_filt',file_filt,'custom_load',custom_load);
 
 	disp('Comparing sound files to the template (this may take a minute)...');
-	[hits.locs,hits.features,hits.file_list]=zftftb_template_match(template.features,DIR);
+	[hits.locs,hits.features,hits.file_list]=zftftb_template_match(template.features,DIR,'file_filt',file_filt);
 
 	% convert hit locations to points in file
 	
@@ -304,6 +311,7 @@ for i=1:length(hits.locs)
 	hits.ext_pts{i}(:,2)=hits.ext_pts{i}(:,1)+act_templatesize+padding(2)*2;
 end
 
+% TODO: save hits selection w/ sampling rate, to use with custom extraction function!
 
 %% train an SVM to use for classifying new sounds, easily swap in other classifiers
 
