@@ -1,7 +1,8 @@
-function [AUDIO USED_FILENAMES]=zftftb_extract_hits(EXT_PTS,FILENAMES,varargin)
+function [AUDIO DATA USED_FILENAMES]=zftftb_extract_hits(EXT_PTS,FILENAMES,varargin)
 
 USED_FILENAMES={};
 AUDIO=[];
+DATA=[];
 
 export_wav=0;
 export_spectrogram=0;
@@ -9,6 +10,8 @@ disp_band=[1 9e3];
 export_dir=pwd;
 colors='hot';
 nparams=length(varargin);
+data_load='';
+audio_load='';
 
 if mod(nparams,2)>0
 	error('ephysPipeline:argChk','Parameters must be specified as parameter/value pairs!');
@@ -26,6 +29,10 @@ for i=1:2:nparams
 			disp_band=varargin{i+1};
 		case 'colors'
 			colors=varargin{i+1};
+		case 'audio_load'
+			audio_load=varargin{i+1};
+		case 'data_load'
+			data_load=varargin{i+1};
 	end
 end
 
@@ -39,8 +46,25 @@ for i=1:length(EXT_PTS)
 		continue;
 	end
 
-	y=wavread(FILENAMES{i});
-	len=length(y);
+	[pathname,filename,ext]=fileparts(FILENAMES{i});
+
+	switch lower(ext)
+
+		case '.wav'
+
+			y=wavread(FILENAMES{i});
+
+		case '.mat'
+
+			if ~isempty(audio_load)
+				y=audio_load(FILENAMES{i});
+			else
+				error('No custom loading function detected for .mat files.');
+			end
+
+	end
+
+	len=length(y);	
 
 	for j=1:size(EXT_PTS{i},1)
 		
@@ -73,10 +97,32 @@ disp(['Found ' num2str(counter) ' trials ']);
 
 %%%%
 
-[y,fs]=wavread(FILENAMES{1});
+[pathname,filename,ext]=fileparts(FILENAMES{1});
+
+switch lower(ext)
+
+	case '.wav'
+
+		[y,fs]=wavread(FILENAMES{1});
+
+	case '.mat'
+
+		if ~isempty(audio_load)
+			[y,fs]=audio_load(FILENAMES{1});
+		else
+			error('No custom loading function detected for .mat files.');
+		end
+
+end
 
 AUDIO.data=zeros(ext_length,counter,'single');
 AUDIO.fs=fs;
+
+if ~isempty(data_load)
+	DATA.data=zeros(ext_length,counter,'single');
+	DATA.fs=fs;
+end
+
 
 trial=1;
 
@@ -86,7 +132,30 @@ for i=1:length(EXT_PTS)
 		continue;
 	end
 
-	[y,fs]=wavread(FILENAMES{i});
+	[pathname,filename,ext]=fileparts(FILENAMES{i});
+
+	switch lower(ext)
+
+		case '.wav'
+
+			[y,fs]=wavread(FILENAMES{i});
+
+		case '.mat'
+
+			if ~isempty(audio_load)
+				[y,fs]=audio_load(FILENAMES{i});
+			else
+				error('No custom loading function detected for .mat files.');
+			end
+
+			if ~isempty(data_load)
+				y2=data_load(FILENAMES{i});
+			else
+				y2=[];
+			end
+
+	end
+
 	len=length(y);
 	filecount=1;
 	[pathname,filename,ext]=fileparts(FILENAMES{i});
@@ -100,6 +169,10 @@ for i=1:length(EXT_PTS)
 
 			USED_FILENAMES{end+1}=FILENAMES{i};
 			AUDIO.data(:,trial)=single(y(startpoint:endpoint));               
+
+			if ~isempty(y2)
+				DATA.data(:,trial)=single(y2(startpoint:endpoint));
+			end
 
 			export_file=fullfile([filename '_chunk_' num2str(filecount)]);
 

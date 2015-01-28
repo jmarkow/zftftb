@@ -32,8 +32,8 @@ function zftftb_song_clust(DIR,varargin)
 %		song_band
 %		frequency band to compute song features over (in Hz, default: [3e3 9e3])
 %
-%		custom_load
-%		anonymous function that returns two outputs [data,fs]=custom_load(FILE), used for loading
+%		audio_load
+%		anonymous function that returns two outputs [data,fs]=audio_load(FILE), used for loading
 %		data from MATLAB files with custom formats
 %
 %		file_filt
@@ -59,8 +59,10 @@ filter_scale=10;
 downsampling=5;
 train_classifier=0;
 song_band=[3e3 9e3];
-custom_load='';
+audio_load='';
+data_load='';
 file_filt='*.wav';
+extract=1;
 
 % TODO: add option to make spectrograms and wavs of all extractions
 
@@ -100,8 +102,10 @@ for i=1:2:nparams
 			export_spectrogram=varargin{i+1};
 		case 'export_wav'
 			export_wav=varargin{i+1};
-		case 'custom_load'
-			custom_load=varargin{i+1};
+		case 'audio_load'
+			audio_load=varargin{i+1};
+		case 'data_load'
+			data_load=varargin{i+1};
 		case 'file_filt'
 			file_filt=varargin{i+1};
 	end
@@ -123,7 +127,7 @@ proc_dir=zftftb_directory_check(DIR);
 
 if ~exist(fullfile(proc_dir,'template_data.mat'),'file')
 
-	[template.data,template.fs]=zftftb_select_template(fullfile(DIR),custom_load);
+	[template.data,template.fs]=zftftb_select_template(fullfile(DIR),audio_load);
 
 	% compute the features of the template
 
@@ -199,7 +203,7 @@ if ~skip
 	disp('Computing features for all sounds...');
 	zftftb_batch_features(DIR,'len',len,'overlap',overlap,...
 		'filter_scale',filter_scale,'downsampling',downsampling,...
-		'song_band',song_band,'file_filt',file_filt,'custom_load',custom_load);
+		'song_band',song_band,'file_filt',file_filt,'audio_load',audio_load);
 
 	disp('Comparing sound files to the template (this may take a minute)...');
 	[hits.locs,hits.features,hits.file_list]=zftftb_template_match(template.features,DIR,'file_filt',file_filt);
@@ -261,15 +265,17 @@ end
 
 if ~skip
 	% concatenate features, pass to cluster cut	
-	
+
 	[~,labels,selection]=markolab_clust_cut(feature_matrix,property_names);
 
 	% now each row of feature matrix correspond to file id, which corresponds to file list
 
-	save(fullfile(proc_dir,'cluster_results.mat'),'labels','selection');	
+
+	save(fullfile(proc_dir,'cluster_results.mat'),'labels','selection');
 else
 	load(fullfile(proc_dir,'cluster_results.mat'),'labels','selection');
 end
+
 
 if isempty(padding)
 	padding=zeros(1,2);
@@ -301,7 +307,7 @@ for i=1:length(hits.locs)
 end	
 
 for i=1:length(hits.locs)
-	
+
 	if isempty(hits.locs{i})
 		hits.ext_pts{i}=[];
 		continue;
@@ -311,7 +317,7 @@ for i=1:length(hits.locs)
 	hits.ext_pts{i}(:,2)=hits.ext_pts{i}(:,1)+act_templatesize+padding(2)*2;
 end
 
-% TODO: save hits selection w/ sampling rate, to use with custom extraction function!
+save(fullfile(proc_dir,'cluster_results.mat'),'hits','-append');
 
 %% train an SVM to use for classifying new sounds, easily swap in other classifiers
 
@@ -338,29 +344,32 @@ end
 
 skip=0;
 response=[];
-if exist(fullfile(proc_dir,'extracted_data.mat'),'file')
-	disp('Looks like you have extracted the data before..');
 
-	while isempty(response)
-		response=input('Would you like to (r)eextract or (s)kip?  ','s');	
-		switch (lower(response))
-			case 'r'
-				skip=0;
-			case 's'
-				skip=1;
-			otherwise
-				response=[];
+if extract
+	if exist(fullfile(proc_dir,'extracted_data.mat'),'file')
+		disp('Looks like you have extracted the data before..');
+
+		while isempty(response)
+			response=input('Would you like to (r)eextract or (s)kip?  ','s');	
+			switch (lower(response))
+				case 'r'
+					skip=0;
+				case 's'
+					skip=1;
+				otherwise
+					response=[];
+				end
 			end
 		end
+
+
+		if ~skip
+			[agg_audio agg_data used_filenames]=zftftb_extract_hits(hits.ext_pts,hits.file_list,'export_wav',export_wav,...
+				'export_spectrogram',export_spectrogram,'export_dir',proc_dir,'audio_load',audio_load,'data_load',data_load);
+			disp(['Saving data to ' fullfile(proc_dir,'extracted_data.mat')]);
+			save(fullfile(proc_dir,'extracted_data.mat'),'agg_audio','agg_data','used_filenames','-v7.3');
+		end
+
+
 	end
-
-
-	if ~skip
-		[agg_audio used_filenames]=zftftb_extract_hits(hits.ext_pts,hits.file_list,'export_wav',export_wav,...
-			'export_spectrogram',export_spectrogram,'export_dir',proc_dir);
-		disp(['Saving data to ' fullfile(proc_dir,'extracted_data.mat')]);
-		save(fullfile(proc_dir,'extracted_data.mat'),'agg_audio','used_filenames','-v7.3');
-	end
-
-
 end

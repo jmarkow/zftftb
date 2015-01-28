@@ -10,7 +10,7 @@ if nargin<2 | isempty(DIR)
 end
 
 nparam=length(varargin);
-custom_load=[]; % anonymous function for reading MATLAB files
+audio_load=[]; % anonymous function for reading MATLAB files
 file_filt='*.wav';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -24,8 +24,8 @@ end
 
 for i=1:2:nparams
 	switch lower(varargin{i})
-		case 'custom_load'
-			custom_load=varargin{i+1};
+		case 'audio_load'
+			audio_load=varargin{i+1};
 		case 'file_filt'
 			file_filt=varargin{i+1};
 	end

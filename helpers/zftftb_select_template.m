@@ -1,9 +1,9 @@
-function [TEMPLATE,FS]=zftftb_select_template(DIR,CUSTOMLOAD)
+function [TEMPLATE,FS]=zftftb_select_template(DIR,AUDIOLOAD)
 
-% CUSTOMLOAD must return the sound data and the sampling rate given a filename
+% AUDIOLOAD must return the sound data and the sampling rate given a filename
 
 if nargin<2
-	CUSTOMLOAD=[];
+	AUDIOLOAD=[];
 end
 
 if nargin<1
@@ -21,10 +21,10 @@ while isempty(response)
 
 	switch lower(ext)
 		case '.mat'
-			if isempty(CUSTOMLOAD)
+			if isempty(AUDIOLOAD)
 				error('Did not specify loading function, cannot load .mat file.');
 			end
-			[y,fs]=CUSTOMLOAD(fullfile(pathname,filename));
+			[y,fs]=AUDIOLOAD(fullfile(pathname,filename));
 		case '.wav'
 			[y,fs]=wavread(fullfile(pathname,filename));
 		otherwise

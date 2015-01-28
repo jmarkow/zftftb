@@ -13,7 +13,7 @@ overlap=33;
 filter_scale=10;
 downsampling=5;
 song_band=[3e3 9e3];
-custom_load=[]; % anonymous function for reading MATLAB files
+audio_load=[]; % anonymous function for reading MATLAB files
 file_filt='*.wav';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -37,8 +37,8 @@ for i=1:2:nparams
 			downsampling=varargin{i+1};
 		case 'song_band'
 			song_band=varargin{i+1};
-		case 'custom_load'
-			custom_load=varargin{i+1};
+		case 'audio_load'
+			audio_load=varargin{i+1};
 		case 'file_filt'
 			file_filt=varargin{i+1};
 	end
@@ -76,8 +76,8 @@ parfor i=1:length(listing)
 		case '.mat'
 			% use custom loading function
 			
-			if ~isempty(custom_load)
-				[audio_data,audio_fs]=custom_load(input_file);
+			if ~isempty(audio_load)
+				[audio_data,audio_fs]=audio_load(input_file);
 			else
 				error('No custom loading function detected for .mat files.');
 			end
