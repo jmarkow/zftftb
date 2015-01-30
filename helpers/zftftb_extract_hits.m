@@ -83,10 +83,17 @@ if counter<1
 end
 
 if export_wav
+	if exist(fullfile(export_dir,'wav'),'dir')
+		rmdir(fullfile(export_dir,'wav'),'s');
+	end
 	mkdir(fullfile(export_dir,'wav'));
 end
 
 if export_spectrogram
+	if exist(fullfile(export_dir,'gif'),'dir')
+		rmdir(fullfile(export_dir,'gif'),'s');
+	end
+
 	mkdir(fullfile(export_dir,'gif'));
 end
 
@@ -194,7 +201,7 @@ for i=1:length(EXT_PTS)
 
 			if export_spectrogram
 
-				[im,f,t]=zftftb_pretty_sonogram(double(AUDIO.data(:,trial)),AUDIO.fs,'len',16.7,'overlap',14,'zeropad',0);
+				[im,f,t]=zftftb_pretty_sonogram(double(AUDIO.data(:,trial)),AUDIO.fs,'len',16.7,'overlap',14,'zeropad',0,'filtering',500);
 
 				startidx=max([find(f<=disp_band(1))]);
 				stopidx=min([find(f>=disp_band(2))]);

@@ -66,8 +66,8 @@ extract=1;
 
 % TODO: add option to make spectrograms and wavs of all extractions
 
-export_spectrogram=0;
-export_wav=0;
+export_spectrogram=1;
+export_wav=1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% CLASSIFICATION FEATURES NAME %%%%%%%
 
