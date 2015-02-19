@@ -99,6 +99,9 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+if ~isa(SIGNAL,'double')
+	SIGNAL=double(SIGNAL);
+end
 
 len=round((len/1e3)*FS);
 overlap=round((overlap/1e3)*FS);

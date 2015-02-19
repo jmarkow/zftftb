@@ -124,10 +124,20 @@ end
 
 AUDIO.data=zeros(ext_length,counter,'single');
 AUDIO.fs=fs;
+AUDIO.bout_count=zeros(1,counter);
+AUDIO.motif_count=zeros(1,counter);
+AUDIO.motif_total=zeros(1,counter);
 
 if ~isempty(data_load)
-	DATA.data=zeros(ext_length,counter,'single');
+	[y2,~,labels,ports]=data_load(FILENAMES{1});
+	[nsamples,nchannels]=size(y2);
+	DATA.data=zeros(ext_length,counter,nchannels,'single');
 	DATA.fs=fs;
+	DATA.labels=labels;
+	DATA.ports=ports;
+	DATA.bout_count=zeros(1,counter);
+	DATA.motif_count=zeros(1,counter);
+	DATA.motif_total=zeros(1,counter);
 end
 
 
@@ -166,7 +176,56 @@ for i=1:length(EXT_PTS)
 	len=length(y);
 	filecount=1;
 	[pathname,filename,ext]=fileparts(FILENAMES{i});
+
+	% get bout structure for file
 	
+
+	[b,a]=ellip(5,.2,40,[500]/(fs/2),'high');
+	tmp=filtfilt(b,a,y);
+	tmp=tmp./max(abs(tmp));
+
+	[song_det,song_det_t]=zftftb_song_det(tmp,fs);
+	raw_t=[1:len]/fs;
+	
+	detection=interp1(song_det_t,double(song_det),raw_t,'nearest');
+
+	bouts=markolab_collate_idxs(detection,round(.1*fs));
+	nbouts=size(bouts,1);
+
+	bout_count=ones(1,size(EXT_PTS{i},1))*NaN;
+	
+	for j=1:size(EXT_PTS{i},1)
+
+		startpoint=EXT_PTS{i}(j,1);
+		endpoint=EXT_PTS{i}(j,2);
+
+		for k=1:nbouts
+			if startpoint>=bouts(k,1) & endpoint<=bouts(k,2)
+				bout_count(j)=k;
+				break;
+			end
+		end
+
+	end
+
+	motif_count=zeros(size(bout_count));
+	motif_total=zeros(size(bout_count));
+
+	for j=1:length(bout_count)
+
+		[val idx]=find(bout_count==bout_count(j));
+
+		if isnan(bout_count(j))
+			motif_count(j)=NaN;
+			motif_total(j)=NaN;
+			continue;
+		end
+
+		motif_count(j)=find(idx==j);
+		motif_total(j)=sum(bout_count==bout_count(j));
+	
+	end
+
 	for j=1:size(EXT_PTS{i},1)
 
 		startpoint=EXT_PTS{i}(j,1);
@@ -175,10 +234,20 @@ for i=1:length(EXT_PTS)
 		if startpoint>0 && endpoint<=len
 
 			USED_FILENAMES{end+1}=FILENAMES{i};
-			AUDIO.data(:,trial)=single(y(startpoint:endpoint));               
-
+			AUDIO.data(:,trial)=single(y(startpoint:endpoint));               	
+			AUDIO.bout_count(trial)=bout_count(j);
+			AUDIO.motif_total(trial)=motif_total(j);	
+			AUDIO.motif_count(trial)=motif_count(j);
+			
 			if ~isempty(y2)
-				DATA.data(:,trial)=single(y2(startpoint:endpoint));
+				
+				for k=1:nchannels
+					DATA.data(:,trial,k)=single(y2(startpoint:endpoint,k));
+				end
+
+				DATA.bout_count(trial)=bout_count(j);
+				DATA.motif_total(trial)=motif_total(j);
+				DATA.motif_count(trial)=motif_count(j);
 			end
 
 			export_file=fullfile([filename '_chunk_' num2str(filecount)]);
@@ -218,4 +287,5 @@ for i=1:length(EXT_PTS)
 			trial=trial+1;
 		end
 	end
+
 end

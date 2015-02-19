@@ -53,6 +53,10 @@ for i=1:length(listing)
 	[pathname,filename,ext]=fileparts(listing{i});
 	target_file=fullfile(pathname,'syllable_data',[ filename '_score.mat']);	
 
+	if ~exist(target_file,'file')
+		continue;
+	end
+    
 	load(target_file,'features');
 	[~,target_length]=size(features{1});
 

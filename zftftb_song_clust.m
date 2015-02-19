@@ -61,7 +61,7 @@ train_classifier=0;
 song_band=[3e3 9e3];
 audio_load='';
 data_load='';
-file_filt='*.wav';
+file_filt='auto'; % if set to auto, will check for the auto file type, first file wins
 extract=1;
 
 % TODO: add option to make spectrograms and wavs of all extractions
@@ -113,6 +113,29 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DIRECTORY CHECK %%%%%%%%%%%%%%%%%%%%
 
+
+if strcmp(lower(file_filt),'auto')
+
+	listing=dir(DIR);
+	ext=[];
+
+	disp('Auto detecting file type');
+
+	for i=1:length(listing)
+		if ~listing(i).isdir & listing(i).name(1)~='.'
+			[pathname,filename,ext]=fileparts(listing(i).name);
+			new_filt=ext;
+		end
+	end
+
+	if isempty(ext)
+		error('Could not detect file type...');
+	end
+
+	file_filt=[ '*' ext ];
+	disp(['File filter:  ' file_filt ]);
+
+end
 
 if nargin<1 | isempty(DIR)
 	DIR=pwd;
@@ -365,7 +388,7 @@ if extract
 
 		if ~skip
 			[agg_audio agg_data used_filenames]=zftftb_extract_hits(hits.ext_pts,hits.file_list,'export_wav',export_wav,...
-				'export_spectrogram',export_spectrogram,'export_dir',proc_dir,'audio_load',audio_load,'data_load',data_load);
+				'export_spectrogram',export_spectrogram,'export_dir',proc_dir,'audio_load',audio_load,'data_load',data_load,'padding',padding);
 			disp(['Saving data to ' fullfile(proc_dir,'extracted_data.mat')]);
 			save(fullfile(proc_dir,'extracted_data.mat'),'agg_audio','agg_data','used_filenames','-v7.3');
 		end
