@@ -1,4 +1,4 @@
-function [EXTRACTED_SOUND,EXTRACTED_IMAGE,TIME_POINTS]=zftftb_spectro_navigate(DATA,FS)
+function [EXTRACTED_SOUND,EXTRACTED_IMAGE,TIME_POINTS,IDXS]=zftftb_spectro_navigate(DATA,FS)
 %simple GUI for selecting time points in sound data based on the spectrogram
 %
 %	[EXTRACTED_SOUND,EXTRACTED_IMAGE]=zftftb_spectro_navigate(DATA,FS)
@@ -100,3 +100,5 @@ while isempty(EXTRACTED_SOUND)
 end
 
 close(overview_fig);
+
+IDXS=extract_idxs;
