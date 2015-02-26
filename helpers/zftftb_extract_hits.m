@@ -142,6 +142,7 @@ end
 
 
 trial=1;
+y2=[];
 
 for i=1:length(EXT_PTS)
 
@@ -151,12 +152,13 @@ for i=1:length(EXT_PTS)
 
 	[pathname,filename,ext]=fileparts(FILENAMES{i});
 
+
 	switch lower(ext)
 
 		case '.wav'
 
 			[y,fs]=wavread(FILENAMES{i});
-
+			
 		case '.mat'
 
 			if ~isempty(audio_load)

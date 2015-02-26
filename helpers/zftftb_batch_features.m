@@ -12,9 +12,12 @@ len=34;
 overlap=33;
 filter_scale=10;
 downsampling=5;
+spec_sigma=1.5;
 song_band=[3e3 9e3];
 audio_load=[]; % anonymous function for reading MATLAB files
 file_filt='*.wav';
+store_dir='syllable_data';
+file_suffix='_score';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETER COLLECTION  %%%%%%%%%%%%%%
@@ -41,18 +44,36 @@ for i=1:2:nparams
 			audio_load=varargin{i+1};
 		case 'file_filt'
 			file_filt=varargin{i+1};
+		case 'store_dir'
+			store_dir=varargin{i+1};
+		case 'file_suffix'
+			file_suffix=varargin{i+1};
+		case 'spec_sigma'
+			spec_sigma=varargin{i+1};
 	end
 end
 
 
 par_save = @(FILE,features,parameters) save(FILE,'features','parameters');
 
-if ~exist(fullfile(DIR,'syllable_data'),'dir')
-	mkdir(fullfile(DIR,'syllable_data'));
-end
+if ~iscell(DIR)
+	if ~exist(fullfile(DIR,'syllable_data'),'dir')
+		mkdir(fullfile(DIR,'syllable_data'));
+	end
 
-listing=dir(fullfile(DIR,file_filt));
-listing={listing(:).name};
+	listing=dir(fullfile(DIR,file_filt));
+	listing={listing(:).name};
+else
+
+	listing=DIR;
+	for i=1:length(listing)
+		[pathname,filename,ext]=fileparts(listing{i});
+		if ~exist(fullfile(pathname,store_dir),'dir')
+			mkdir(fullfile(pathname,store_dir));
+		end
+	end
+
+end
 
 parfor i=1:length(listing)
 
@@ -63,10 +84,9 @@ parfor i=1:length(listing)
 	disp([input_file])
 
 	[pathname,filename,ext]=fileparts(input_file);
-	output_file=fullfile(DIR,'syllable_data',[ filename '_score.mat']);
+	output_file=fullfile(pathname,store_dir,[ filename file_suffix '.mat']);
 
 	if exist(output_file,'file'), continue; end
-
 	disp(['Computing features for ' input_file]);
 
 	% simply read in the file and score it
@@ -93,10 +113,13 @@ parfor i=1:length(listing)
 	end
 
 	[sound_features,parameters]=zftftb_song_score(audio_data,audio_fs,...
-		'len',len,'overlap',overlap,'filter_scale',filter_scale,'downsampling',downsampling,'song_band',song_band);
+		'len',len,'overlap',overlap,'filter_scale',filter_scale,...
+		'downsampling',downsampling,'song_band',song_band,'spec_sigma',spec_sigma);
 
 	% save for posterity's sake
 
 	par_save(output_file,sound_features,parameters);
+
+
 
 end

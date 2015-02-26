@@ -1,4 +1,4 @@
-function [FEATURES,PARAMETERS]=ephys_pipeline_smscore(s,FS,varargin)
+function [FEATURES,PARAMETERS]=zftftb_song_score(s,FS,varargin)
 %computes spectral FEATURES of a given signal
 %
 %
@@ -39,13 +39,13 @@ end
 
 % map to parameters structure
 
-PARAMETERS.normalize_amplitude=norm_amp;
+PARAMETERS.norm_amp=norm_amp;
 PARAMETERS.song_band=song_band;
 PARAMETERS.filter_scale=filter_scale;
-PARAMETERS.spectrogram.timescale=spec_sigma;
-PARAMETERS.downsample_factor=downsampling;
-PARAMETERS.spectrogram.len=len;
-PARAMETERS.spectrogram.overlap=overlap;
+PARAMETERS.spec_sigma=spec_sigma;
+PARAMETERS.downsampling=downsampling;
+PARAMETERS.len=len;
+PARAMETERS.overlap=overlap;
 PARAMETERS.feature_names={'Cos(angle) from the reassignment vector',...
 	'dx','dy','Smoothed spectrogram'};
 

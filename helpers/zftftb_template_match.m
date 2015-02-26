@@ -1,4 +1,4 @@
-function [HITS_LOCS,HITS_FEATURES,HITS_FILE_LIST]=ftftb_template_match(TEMPLATE,DIR,varargin)
+function [HITS_LOCS,HITS_FEATURES,HITS_FILE_LIST]=zftftb_template_match(TEMPLATE,DIR,varargin)
 
 % do the template matching here...
 
@@ -12,6 +12,8 @@ end
 nparam=length(varargin);
 audio_load=[]; % anonymous function for reading MATLAB files
 file_filt='*.wav';
+score_dir='syllable_data';
+score_ext='_score';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETER COLLECTION  %%%%%%%%%%%%%%
@@ -28,18 +30,26 @@ for i=1:2:nparams
 			audio_load=varargin{i+1};
 		case 'file_filt'
 			file_filt=varargin{i+1};
+		case 'score_dir'
+			score_dir=varargin{i+1};
+		case 'score_ext'
+			score_ext=varargin{i+1};
 	end
 end
 
 template_length=size(TEMPLATE{1},2)-1;
 
-listing=dir(fullfile(DIR,file_filt));
-listing={listing(:).name};
 
-% TODO: modify load function to allow parfor
-% TODO: leverage pdist2, but would require extensive reshaping (overhead may not be worth avoiding for loop)
+if iscell(DIR)
+	listing=DIR;
+else
+	listing=dir(fullfile(DIR,file_filt));
+	listing={listing(:).name};
+end
 
-for i=1:length(listing)
+% TODO: leverage pdist, but would require extensive reshaping (overhead may not be worth avoiding for loop)
+
+parfor i=1:length(listing)
 
 	HITS_LOCS{i}=[];
 	HITS_FEATURES{i}=[];
@@ -51,13 +61,14 @@ for i=1:length(listing)
 	% load the features of the sound data
 
 	[pathname,filename,ext]=fileparts(listing{i});
-	target_file=fullfile(pathname,'syllable_data',[ filename '_score.mat']);	
+	target_file=fullfile(pathname,score_dir,[ filename score_ext '.mat']);	
 
 	if ~exist(target_file,'file')
 		continue;
 	end
     
-	load(target_file,'features');
+	data=load(target_file,'features');
+	features=data.features;
 	[~,target_length]=size(features{1});
 
 	disp([ listing{i} ])

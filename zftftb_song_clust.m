@@ -59,6 +59,7 @@ filter_scale=10;
 downsampling=5;
 train_classifier=0;
 song_band=[3e3 9e3];
+spec_sigma=1.5;
 audio_load='';
 data_load='';
 file_filt='auto'; % if set to auto, will check for the auto file type, first file wins
@@ -96,6 +97,8 @@ for i=1:2:nparams
 			filter_scale=varargin{i+1};
 		case 'downsampling'
 			downsampling=varargin{i+1};
+		case 'spec_sigma'
+			spec_sigma=varargin{i+1};
 		case 'song_band'
 			song_band=varargin{i+1};
 		case 'export_spectrogram'
@@ -156,7 +159,8 @@ if ~exist(fullfile(proc_dir,'template_data.mat'),'file')
 
 	disp('Computing the spectral features of the template');
 	[template.features template.feature_parameters]=zftftb_song_score(template.data,template.fs,...
-		'len',len,'overlap',overlap,'filter_scale',filter_scale,'downsampling',downsampling,'song_band',song_band);
+		'len',len,'overlap',overlap,'filter_scale',filter_scale,'downsampling',downsampling,...
+		'song_band',song_band,'spec_sigma',spec_sigma);
 	save(fullfile(proc_dir,'template_data.mat'),'template','padding');
 
 	template_fig=figure('Visible','off');
@@ -226,7 +230,7 @@ if ~skip
 	disp('Computing features for all sounds...');
 	zftftb_batch_features(DIR,'len',len,'overlap',overlap,...
 		'filter_scale',filter_scale,'downsampling',downsampling,...
-		'song_band',song_band,'file_filt',file_filt,'audio_load',audio_load);
+		'song_band',song_band,'file_filt',file_filt,'audio_load',audio_load,'spec_sigma',spec_sigma);
 
 	disp('Comparing sound files to the template (this may take a minute)...');
 	[hits.locs,hits.features,hits.file_list]=zftftb_template_match(template.features,DIR,'file_filt',file_filt);
@@ -262,30 +266,8 @@ end
 
 % collect features into matrix, make sure we can map it back to cell
 
-total_peaks=sum(cellfun(@length,hits.locs));
-non_empty=find(cellfun(@length,hits.locs)>0);
-nfeatures=size(hits.features{non_empty(1)},2);
-
-feature_matrix=zeros(total_peaks,nfeatures);
-file_id=zeros(total_peaks,1);
-peak_order=zeros(total_peaks,1);
-
-counter=1;
-
-for i=1:length(hits.features)
+[feature_matrix,file_id,peak_order]=zftftb_hits_to_mat(hits);
 	
-	if isempty(hits.features)
-		continue;
-	end
-
-	for j=1:size(hits.features{i},1)
-		feature_matrix(counter,:)=hits.features{i}(j,:);
-		file_id(counter)=i;
-		peak_order(counter)=j;
-		counter=counter+1;
-	end
-end
-
 if ~skip
 	% concatenate features, pass to cluster cut	
 
@@ -299,46 +281,8 @@ else
 	load(fullfile(proc_dir,'cluster_results.mat'),'labels','selection');
 end
 
-
-if isempty(padding)
-	padding=zeros(1,2);
-else
-	padding=round(padding.*template.fs);
-end
-
-len=round((len/1e3)*template.fs);
-overlap=round((overlap/1e3)*template.fs);
-stepsize=len-overlap;
-
-select_idx=(labels==selection);
-
-for i=1:length(hits.locs)
-
-	% get the indices for this file
-
-	tmp=select_idx(file_id==i);
-	tmp2=peak_order(file_id==i);
-
-	% ensure ordering is correct
-
-	tmp=tmp(tmp2);
-
-	% delete peaks that were not selected
-
-	hits.locs{i}(tmp==0)=[];
-
-end	
-
-for i=1:length(hits.locs)
-
-	if isempty(hits.locs{i})
-		hits.ext_pts{i}=[];
-		continue;
-	end
-
-	hits.ext_pts{i}(:,1)=round(((hits.locs{i}-1)*stepsize*downsampling)-padding(1));
-	hits.ext_pts{i}(:,2)=hits.ext_pts{i}(:,1)+act_templatesize+padding(2)*2;
-end
+hits.ext_pts=zftftb_add_extractions(hits,labels,selection,file_id,peak_order,template.fs,act_templatesize,...
+	'len',len,'overlap',overlap,'padding',padding);
 
 save(fullfile(proc_dir,'cluster_results.mat'),'hits','-append');
 
@@ -355,15 +299,19 @@ if train_classifier
 
 	% quadratic boundaries work the best in this situation
 
-	classobject=svmtrain(feature_matrix,labels,'method','smo','kernel_function','quadratic');
-	save(fullfile(proc_dir,'classify_data.mat'),'classobject','cluster_choice');
+	svm_object=svmtrain(feature_matrix,labels,'method','smo','kernel_function','quadratic');
+	
+	% specify a classifier function (this will make using other clustering methods simple in the future)
+
+	class_fun=@(FEATURES) svmclassify(svm_object,FEATURES);
+
+	save(fullfile(proc_dir,'classify_data.mat'),'svm_object','class_fun','cluster_choice');
 
 end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% HIT EXTRACTION %%%%%%%%%%%%%%%%%%%%%
-
 
 skip=0;
 response=[];
@@ -388,7 +336,7 @@ if extract
 
 		if ~skip
 			[agg_audio agg_data used_filenames]=zftftb_extract_hits(hits.ext_pts,hits.file_list,'export_wav',export_wav,...
-				'export_spectrogram',export_spectrogram,'export_dir',proc_dir,'audio_load',audio_load,'data_load',data_load,'padding',padding);
+				'export_spectrogram',export_spectrogram,'export_dir',proc_dir,'audio_load',audio_load,'data_load',data_load);
 			disp(['Saving data to ' fullfile(proc_dir,'extracted_data.mat')]);
 			save(fullfile(proc_dir,'extracted_data.mat'),'agg_audio','agg_data','used_filenames','-v7.3');
 		end
