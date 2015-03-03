@@ -60,6 +60,7 @@ downsampling=5;
 train_classifier=0;
 song_band=[3e3 9e3];
 spec_sigma=1.5;
+norm_amp=0;
 audio_load='';
 data_load='';
 file_filt='auto'; % if set to auto, will check for the auto file type, first file wins
@@ -111,6 +112,8 @@ for i=1:2:nparams
 			data_load=varargin{i+1};
 		case 'file_filt'
 			file_filt=varargin{i+1};
+		case 'norm_amp'
+			norm_amp=varargin{i+1};
 	end
 end
 
@@ -160,7 +163,7 @@ if ~exist(fullfile(proc_dir,'template_data.mat'),'file')
 	disp('Computing the spectral features of the template');
 	[template.features template.feature_parameters]=zftftb_song_score(template.data,template.fs,...
 		'len',len,'overlap',overlap,'filter_scale',filter_scale,'downsampling',downsampling,...
-		'song_band',song_band,'spec_sigma',spec_sigma);
+		'song_band',song_band,'spec_sigma',spec_sigma,'norm_amp',norm_amp);
 	save(fullfile(proc_dir,'template_data.mat'),'template','padding');
 
 	template_fig=figure('Visible','off');
@@ -230,7 +233,8 @@ if ~skip
 	disp('Computing features for all sounds...');
 	zftftb_batch_features(DIR,'len',len,'overlap',overlap,...
 		'filter_scale',filter_scale,'downsampling',downsampling,...
-		'song_band',song_band,'file_filt',file_filt,'audio_load',audio_load,'spec_sigma',spec_sigma);
+		'song_band',song_band,'file_filt',file_filt,'audio_load',...
+		audio_load,'spec_sigma',spec_sigma,'norm_amp',norm_amp);
 
 	disp('Comparing sound files to the template (this may take a minute)...');
 	[hits.locs,hits.features,hits.file_list]=zftftb_template_match(template.features,DIR,'file_filt',file_filt);
@@ -271,14 +275,14 @@ end
 if ~skip
 	% concatenate features, pass to cluster cut	
 
-	[~,labels,selection]=markolab_clust_cut(feature_matrix,property_names);
+	[~,labels,selection,features_used]=markolab_clust_cut(feature_matrix,property_names);
 
 	% now each row of feature matrix correspond to file id, which corresponds to file list
 
 
-	save(fullfile(proc_dir,'cluster_results.mat'),'labels','selection');
+	save(fullfile(proc_dir,'cluster_results.mat'),'labels','selection','features_used');
 else
-	load(fullfile(proc_dir,'cluster_results.mat'),'labels','selection');
+	load(fullfile(proc_dir,'cluster_results.mat'),'labels','selection','features_used');
 end
 
 hits.ext_pts=zftftb_add_extractions(hits,labels,selection,file_id,peak_order,template.fs,act_templatesize,...
@@ -299,13 +303,20 @@ if train_classifier
 
 	% quadratic boundaries work the best in this situation
 
-	svm_object=svmtrain(feature_matrix,labels,'method','smo','kernel_function','quadratic');
+	% two classes, selection, non-selection
+	
+	labels(labels~=cluster_choice)=NaN;
+	labels(labels==cluster_choice)=2; % hits are class 2
+	labels(isnan(labels))=1; % non-hits are class 1
+	cluster_choice=2; % what are hits?
+
+	svm_object=svmtrain(feature_matrix(:,features_used),labels,'method','smo','kernel_function','quadratic');
 	
 	% specify a classifier function (this will make using other clustering methods simple in the future)
 
 	class_fun=@(FEATURES) svmclassify(svm_object,FEATURES);
 
-	save(fullfile(proc_dir,'classify_data.mat'),'svm_object','class_fun','cluster_choice');
+	save(fullfile(proc_dir,'classify_data.mat'),'svm_object','class_fun','cluster_choice','features_used');
 
 end
 

@@ -127,6 +127,7 @@ AUDIO.fs=fs;
 AUDIO.bout_count=zeros(1,counter);
 AUDIO.motif_count=zeros(1,counter);
 AUDIO.motif_total=zeros(1,counter);
+AUDIO.filename=cell(1,counter);
 
 if ~isempty(data_load)
 	[y2,~,labels,ports]=data_load(FILENAMES{1});
@@ -138,6 +139,7 @@ if ~isempty(data_load)
 	DATA.bout_count=zeros(1,counter);
 	DATA.motif_count=zeros(1,counter);
 	DATA.motif_total=zeros(1,counter);
+	DATA.filename=cell(1,counter);
 end
 
 
@@ -240,7 +242,8 @@ for i=1:length(EXT_PTS)
 			AUDIO.bout_count(trial)=bout_count(j);
 			AUDIO.motif_total(trial)=motif_total(j);	
 			AUDIO.motif_count(trial)=motif_count(j);
-			
+			AUDIO.filename{trial}=FILENAMES{i};
+
 			if ~isempty(y2)
 				
 				for k=1:nchannels
@@ -250,6 +253,7 @@ for i=1:length(EXT_PTS)
 				DATA.bout_count(trial)=bout_count(j);
 				DATA.motif_total(trial)=motif_total(j);
 				DATA.motif_count(trial)=motif_count(j);
+				DATA.filename{trial}=FILENAMES{i};
 			end
 
 			export_file=fullfile([filename '_chunk_' num2str(filecount)]);
@@ -272,7 +276,8 @@ for i=1:length(EXT_PTS)
 
 			if export_spectrogram
 
-				[im,f,t]=zftftb_pretty_sonogram(double(AUDIO.data(:,trial)),AUDIO.fs,'len',16.7,'overlap',14,'zeropad',0,'filtering',500);
+				[im,f,t]=zftftb_pretty_sonogram(double(AUDIO.data(:,trial)),AUDIO.fs,'len',16.7,'overlap',14,'zeropad',0,'filtering',500,...
+					'clipping',-6);
 
 				startidx=max([find(f<=disp_band(1))]);
 				stopidx=min([find(f>=disp_band(2))]);

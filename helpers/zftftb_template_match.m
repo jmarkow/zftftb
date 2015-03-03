@@ -83,8 +83,7 @@ parfor i=1:length(listing)
 			score_temp{j}(k)=[sum(sum(abs(targ(:,k:k+template_length)-template)))];
 		end
 
-		score_temp{j}=score_temp{j}-mean(score_temp{j});
-		score_temp{j}=score_temp{j}/std(score_temp{j});
+		score_temp{j}=zscore(score_temp{j});
 		score_temp{j}(score_temp{j}>0)=0;
 		score_temp{j}=abs(score_temp{j});
 

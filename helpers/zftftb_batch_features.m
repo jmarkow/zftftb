@@ -18,6 +18,7 @@ audio_load=[]; % anonymous function for reading MATLAB files
 file_filt='*.wav';
 store_dir='syllable_data';
 file_suffix='_score';
+norm_amp=1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETER COLLECTION  %%%%%%%%%%%%%%
@@ -50,6 +51,8 @@ for i=1:2:nparams
 			file_suffix=varargin{i+1};
 		case 'spec_sigma'
 			spec_sigma=varargin{i+1};
+		case 'norm_amp'
+			norm_amp=varargin{i+1};
 	end
 end
 
@@ -114,7 +117,8 @@ parfor i=1:length(listing)
 
 	[sound_features,parameters]=zftftb_song_score(audio_data,audio_fs,...
 		'len',len,'overlap',overlap,'filter_scale',filter_scale,...
-		'downsampling',downsampling,'song_band',song_band,'spec_sigma',spec_sigma);
+		'downsampling',downsampling,'song_band',song_band,'spec_sigma',spec_sigma,...
+		'norm_amp',norm_amp);
 
 	% save for posterity's sake
 

@@ -46,6 +46,7 @@ PARAMETERS.spec_sigma=spec_sigma;
 PARAMETERS.downsampling=downsampling;
 PARAMETERS.len=len;
 PARAMETERS.overlap=overlap;
+PARAMETERS.fs=FS;
 PARAMETERS.feature_names={'Cos(angle) from the reassignment vector',...
 	'dx','dy','Smoothed spectrogram'};
 
