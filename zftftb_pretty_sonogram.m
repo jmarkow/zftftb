@@ -58,9 +58,9 @@ len=70; % window length (ms)
 postproc='y'; % postprocessing
 nfft=[];
 zeropad=[];
-norm_amp=1; % normalize amplitude?
+norm_amp=0; % normalize amplitude?
 filtering=[];
-clipping=-2; % clipping
+clipping=[-2 2]; % clipping
 saturation=.8; % image saturation (0-1)
 
 if mod(nparams,2)>0
@@ -160,9 +160,15 @@ dw = -2*w.*(t/(sigma^2));
 % leaving intact for now to retain legacy compatibility
 
 if lower(postproc(1))=='y'	
+	
+	if length(clipping)==1
+		clipping=[clipping max(IMAGE(:))];
+	end
+
 	IMAGE=log((abs(S)+abs(S2))/2);
-	IMAGE=max(IMAGE,clipping);
-	IMAGE=(IMAGE-clipping);
+	IMAGE=min(IMAGE,clipping(2));
+	IMAGE=max(IMAGE,clipping(1));
+	IMAGE=(IMAGE-clipping(1));
 	IMAGE=IMAGE./max(IMAGE(:)); % scale from 0 to 1
 	IMAGE=IMAGE*saturation;
 else
