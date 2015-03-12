@@ -161,11 +161,13 @@ dw = -2*w.*(t/(sigma^2));
 
 if lower(postproc(1))=='y'	
 	
+    IMAGE=log((abs(S)+abs(S2))/2);
+    
 	if length(clipping)==1
 		clipping=[clipping max(IMAGE(:))];
 	end
 
-	IMAGE=log((abs(S)+abs(S2))/2);
+	
 	IMAGE=min(IMAGE,clipping(2));
 	IMAGE=max(IMAGE,clipping(1));
 	IMAGE=(IMAGE-clipping(1));

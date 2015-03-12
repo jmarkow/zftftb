@@ -42,7 +42,7 @@ DATA=DATA./abs(max(DATA));
 % sampling rate doesn't matter here at all, just using a dummy value, 48e3
 % TODO: first double click to place rectangle to prevent too much scrolling
 
-[sonogram_im,f,t]=zftftb_pretty_sonogram(DATA,FS,'len',len,'overlap',overlap,'clipping',-5,'filtering',300);
+[sonogram_im,f,t]=zftftb_pretty_sonogram(DATA,FS,'len',len,'overlap',overlap,'clipping',[-3 2],'filtering',300);
 sonogram_im=flipdim(sonogram_im,1)*62;
 
 [height,width]=size(sonogram_im);
