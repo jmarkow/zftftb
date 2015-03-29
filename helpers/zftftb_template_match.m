@@ -15,6 +15,10 @@ file_filt='*.wav';
 score_dir='syllable_data';
 score_ext='_score';
 
+HITS_LOCS={};
+HITS_FEATURES={};
+HITS_FILE_LIST={};
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETER COLLECTION  %%%%%%%%%%%%%%
 

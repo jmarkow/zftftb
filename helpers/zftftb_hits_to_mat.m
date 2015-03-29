@@ -2,7 +2,16 @@ function [FEATURE_MATRIX,FILE_ID,PEAK_ORDER]=zftftb_hits_to_mat(HITS)
 %
 %
 %
-	
+
+
+FEATURE_MATRIX=[];
+FILE_ID=[];
+PEAK_ORDER=[];
+
+if isempty(HITS.locs)
+	return;
+end
+
 total_peaks=sum(cellfun(@length,HITS.locs));
 non_empty=find(cellfun(@length,HITS.locs)>0);
 nfeatures=size(HITS.features{non_empty(1)},2);

@@ -277,7 +277,7 @@ for i=1:length(EXT_PTS)
 			if export_spectrogram
 
 				[im,f,t]=zftftb_pretty_sonogram(double(AUDIO.data(:,trial)),AUDIO.fs,'len',16.7,'overlap',14,'zeropad',0,'filtering',500,...
-					'clipping',-6);
+					'clipping',[-3 2],'norm_amp',1);
 
 				startidx=max([find(f<=disp_band(1))]);
 				stopidx=min([find(f>=disp_band(2))]);
