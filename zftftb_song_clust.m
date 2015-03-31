@@ -328,13 +328,27 @@ skip=0;
 response=[];
 
 if extract
-	if exist(fullfile(proc_dir,'extracted_data.mat'),'file')
+	if exist(fullfile(proc_dir,'mat'),'dir') | exist(fullfile(proc_dir,'wav'),'dir') | exist(fullfile(proc_dir,'gif'),'dir')
+
 		disp('Looks like you have extracted the data before..');
 
 		while isempty(response)
 			response=input('Would you like to (r)eextract or (s)kip?  ','s');	
 			switch (lower(response))
 				case 'r'
+
+					if exist(fullfile(proc_dir,'mat'),'dir')
+						rmdir(fullfile(proc_dir,'mat'),'s');
+					end
+
+					if exist(fullfile(proc_dir,'gif'),'dir')
+						rmdir(fullfile(proc_dir,'gif'),'s');
+					end
+
+					if exist(fullfile(proc_dir,'wav'),'dir')
+						rmdir(fullfile(proc_dir,'wav'),'s');
+					end
+
 					skip=0;
 				case 's'
 					skip=1;
@@ -344,12 +358,14 @@ if extract
 			end
 		end
 
-
 		if ~skip
-			[agg_audio agg_data used_filenames]=zftftb_extract_hits(hits.ext_pts,hits.file_list,'export_wav',export_wav,...
-				'export_spectrogram',export_spectrogram,'export_dir',proc_dir,'audio_load',audio_load,'data_load',data_load);
-			disp(['Saving data to ' fullfile(proc_dir,'extracted_data.mat')]);
-			save(fullfile(proc_dir,'extracted_data.mat'),'agg_audio','agg_data','used_filenames','-v7.3');
+			
+			robofinch_extract_data(hits.ext_pts,hits.file_list,proc_dir,'audio_load',audio_load,'data_load',data_load,...
+				'export_wav',export_wav,'export_spectrogram',export_spectrogram,'export_dir',proc_dir);
+
+			%[agg_audio agg_data used_filenames]=zftftb_extract_hits(hits.ext_pts,hits.file_list,'export_wav',export_wav,...
+			%	'export_spectrogram',export_spectrogram,'export_dir',proc_dir,'audio_load',audio_load,'data_load',data_load);
+			%save(fullfile(proc_dir,'extracted_data.mat'),'agg_audio','agg_data','used_filenames','-v7.3');
 		end
 
 

@@ -154,7 +154,6 @@ for i=1:length(EXT_PTS)
 
 	[pathname,filename,ext]=fileparts(FILENAMES{i});
 
-
 	switch lower(ext)
 
 		case '.wav'

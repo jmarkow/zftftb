@@ -133,11 +133,11 @@ end
 
 if ~isempty(zeropad)
 	SIGNAL=[zeros(zeropad,1);SIGNAL(:);zeros(zeropad,1)];
-	disp(['Zero pad: ' num2str(zeropad/FS) ' S']);
+	%disp(['Zero pad: ' num2str(zeropad/FS) ' S']);
 end
 
 if norm_amp
-	disp('Normalizing signal amplitude');
+	%disp('Normalizing signal amplitude');
 	SIGNAL=SIGNAL./max(abs(SIGNAL));
 end
 
