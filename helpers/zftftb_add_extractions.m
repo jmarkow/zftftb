@@ -35,6 +35,20 @@ else
 	padding=round(padding.*FS);
 end
 
+nlocs=length(HITS.locs);
+
+if length(len)==1
+	len=repmat(len,[1 nlocs]);
+end
+
+if length(overlap)==1
+	overlap=repmat(overlap,[1 nlocs]);
+end
+
+if length(downsampling)==1
+	downsampling=repmat(downsampling,[1 nlocs]);
+end
+
 len=round((len/1e3)*FS);
 overlap=round((overlap/1e3)*FS);
 stepsize=len-overlap;
@@ -65,7 +79,7 @@ for i=1:length(HITS.locs)
 		continue;
 	end
 
-	EXT_PTS{i}(:,1)=round(((HITS.locs{i}-1)*stepsize*downsampling)-padding(1));
+	EXT_PTS{i}(:,1)=round(((HITS.locs{i}-1)*stepsize(i)*downsampling(i))-padding(1));
 	EXT_PTS{i}(:,2)=EXT_PTS{i}(:,1)+TEMPLATE_SIZE+sum(padding);
 
 end

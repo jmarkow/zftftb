@@ -78,7 +78,21 @@ else
 
 end
 
-parfor i=1:length(listing)
+nhits=length(listing);
+
+if length(len)==1, len=repmat(len,[1 nhits]); end
+if length(overlap)==1, overlap=repmat(overlap,[1 nhits]); end
+if length(filter_scale)==1, filter_scale=repmat(filter_scale,[1 nhits]); end
+if length(downsampling)==1, downsampling=repmat(downsampling,[1 nhits]); end
+if size(song_band,1)==1, song_band=repmat(song_band,[nhits 1]); end
+if length(spec_sigma)==1, spec_sigma=repmat(spec_sigma,[1 nhits]); end
+if length(norm_amp)==1, norm_amp=repmat(norm_amp,[1 nhits]); end
+
+if length(audio_load)==1 
+	audio_load=repmat(audio_load,[1 nhits]);
+end
+
+parfor i=1:nhits
 
 	audio_data=[];
 	audio_fs=[];
@@ -100,7 +114,8 @@ parfor i=1:length(listing)
 			% use custom loading function
 			
 			if ~isempty(audio_load)
-				[audio_data,audio_fs]=audio_load(input_file);
+
+				[audio_data,audio_fs]=audio_load{i}(input_file);
 			else
 				error('No custom loading function detected for .mat files.');
 			end
@@ -116,14 +131,13 @@ parfor i=1:length(listing)
 	end
 
 	[sound_features,parameters]=zftftb_song_score(audio_data,audio_fs,...
-		'len',len,'overlap',overlap,'filter_scale',filter_scale,...
-		'downsampling',downsampling,'song_band',song_band,'spec_sigma',spec_sigma,...
-		'norm_amp',norm_amp);
+		'len',len(i),'overlap',overlap(i),'filter_scale',filter_scale(i),...
+		'downsampling',downsampling(i),'song_band',song_band(i,:),'spec_sigma',spec_sigma(i),...
+		'norm_amp',norm_amp(i));
 
 	% save for posterity's sake
 
 	par_save(output_file,sound_features,parameters);
-
 
 
 end
