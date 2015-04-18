@@ -88,8 +88,15 @@ if size(song_band,1)==1, song_band=repmat(song_band,[nhits 1]); end
 if length(spec_sigma)==1, spec_sigma=repmat(spec_sigma,[1 nhits]); end
 if length(norm_amp)==1, norm_amp=repmat(norm_amp,[1 nhits]); end
 
-if length(audio_load)==1 
-	audio_load=repmat(audio_load,[1 nhits]);
+if length(audio_load)==1
+
+	if iscell(audio_load)	
+		audio_load=repmat(audio_load,[1 nhits]);
+	else
+		tmp={audio_load};
+		tmp=repmat(tmp,[1 nhits]);
+		audio_load=tmp;
+	end
 end
 
 parfor i=1:nhits
