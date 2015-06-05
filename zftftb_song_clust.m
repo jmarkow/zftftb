@@ -114,6 +114,8 @@ for i=1:2:nparams
 			file_filt=varargin{i+1};
 		case 'norm_amp'
 			norm_amp=varargin{i+1};
+		case 'extract'
+			extract=varargin{i+1};
 	end
 end
 

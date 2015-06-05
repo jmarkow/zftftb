@@ -50,6 +50,9 @@ function zftftb_song_chop(DIR,varargin)
 %
 %		export_spectrogram
 %		enable spectrogram export (default: 1)
+%
+%		clipping
+%		clipping limits for spectrogram (default: [-2 2], linear units)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETER COLLECTION  %%%%%%%%%%%%%%
@@ -73,6 +76,7 @@ file_filt='*.wav';
 audio_pad=[ 1 ];
 colors='hot';
 disp_band=[1 9e3];
+clipping=[-2 2];
 
 export_wav=1;
 export_spectrogram=1;
@@ -112,6 +116,8 @@ for i=1:2:nparams
 			audio_pad=varargin{i+1};
 		case 'colors'
 			colors=varargin{i+1};
+		case 'clipping'
+			clipping=varargin{i+1};
 	end
 end
 
@@ -202,7 +208,8 @@ for i=1:length(listing)
 
 			if export_spectrogram
 
-				[im,f,t]=zftftb_pretty_sonogram(extraction,audio_fs,'len',16.7,'overlap',14,'zeropad',0);
+				[im,f,t]=zftftb_pretty_sonogram(extraction,audio_fs,'len',16.7,'overlap',14,...
+					'zeropad',0,'norm_amp',1,'clipping',clipping);
 
 				startidx=max([find(f<=disp_band(1))]);
 				stopidx=min([find(f>=disp_band(2))]);

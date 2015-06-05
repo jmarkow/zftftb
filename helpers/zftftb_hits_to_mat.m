@@ -14,6 +14,11 @@ end
 
 total_peaks=sum(cellfun(@length,HITS.locs));
 non_empty=find(cellfun(@length,HITS.locs)>0);
+
+if length(non_empty)==0
+	return;
+end
+
 nfeatures=size(HITS.features{non_empty(1)},2);
 
 FEATURE_MATRIX=zeros(total_peaks,nfeatures);
