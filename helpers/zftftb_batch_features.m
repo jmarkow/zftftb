@@ -13,6 +13,7 @@ overlap=33;
 filter_scale=10;
 downsampling=5;
 spec_sigma=1.5;
+file_check=1;
 song_band=[3e3 9e3];
 audio_load=[]; % anonymous function for reading MATLAB files
 file_filt='*.wav';
@@ -103,9 +104,29 @@ parfor i=1:nhits
 
 	audio_data=[];
 	audio_fs=[];
+	bytedif=[];
 
 	input_file=listing{i};
 	disp([input_file])
+
+	dir1=dir(input_file);
+	pause(file_check);
+	dir2=dir(input_file);
+
+	try
+		bytedif=dir1.bytes-dir2.bytes;
+	catch
+		pause(10);
+		bytedif=dir1.bytes-dir2.bytes;
+	end
+
+	% if we haven't written any new data in the past (file_check) seconds, assume
+	% file has been written
+
+	if bytedif~=0
+		disp('File still being written, continuing...');
+		continue;
+	end
 
 	[pathname,filename,ext]=fileparts(input_file);
 	output_file=fullfile(pathname,store_dir,[ filename file_suffix '.mat']);
