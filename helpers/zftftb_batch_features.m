@@ -100,6 +100,8 @@ if length(audio_load)==1
 	end
 end
 
+% for some reason parfor freezes with >2 workers in MATLAB2014a, need to debug
+
 parfor i=1:nhits
 
 	audio_data=[];
@@ -108,6 +110,8 @@ parfor i=1:nhits
 
 	input_file=listing{i};
 	disp([input_file])
+
+	% make sure file is being currently written
 
 	dir1=dir(input_file);
 	pause(file_check);
@@ -142,8 +146,11 @@ parfor i=1:nhits
 			% use custom loading function
 			
 			if ~isempty(audio_load)
-
 				[audio_data,audio_fs]=audio_load{i}(input_file);
+				if isempty(audio_data)
+					warning('No audio data found in file %s',input_file);
+					continue;
+				end
 			else
 				error('No custom loading function detected for .mat files.');
 			end
