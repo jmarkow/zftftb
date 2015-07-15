@@ -13,7 +13,7 @@ overlap=33;
 filter_scale=10;
 downsampling=5;
 spec_sigma=1.5;
-file_check=1;
+file_check=.05;
 song_band=[3e3 9e3];
 audio_load=[]; % anonymous function for reading MATLAB files
 file_filt='*.wav';
@@ -58,7 +58,7 @@ for i=1:2:nparams
 end
 
 
-par_save = @(FILE,features,parameters) save(FILE,'features','parameters');
+%par_save = @(FILE,features,parameters) save(FILE,'features','parameters');
 
 if ~iscell(DIR)
 	if ~exist(fullfile(DIR,'syllable_data'),'dir')
@@ -100,16 +100,22 @@ if length(audio_load)==1
 	end
 end
 
-% for some reason parfor freezes with >2 workers in MATLAB2014a, need to debug
+% loading via anonymous function does not work in ver >=MATLAB2013a 
 
 parfor i=1:nhits
 
 	audio_data=[];
 	audio_fs=[];
 	bytedif=[];
+	dir1=[];
+	dir2=[];
+	tmp=[];
+	input_file=[];
+	sound_features=[];
+	parameters=[];
 
 	input_file=listing{i};
-	disp([input_file])
+	fprintf('%s\n',input_file);
 
 	% make sure file is being currently written
 
@@ -117,62 +123,58 @@ parfor i=1:nhits
 	pause(file_check);
 	dir2=dir(input_file);
 
-	try
-		bytedif=dir1.bytes-dir2.bytes;
-	catch
-		pause(10);
-		bytedif=dir1.bytes-dir2.bytes;
-	end
+	bytedif=dir1.bytes-dir2.bytes;
 
-	% if we haven't written any new data in the past (file_check) seconds, assume
-	% file has been written
-
-	if bytedif~=0
-		disp('File still being written, continuing...');
-		continue;
-	end
+	bytedif=0;
 
 	[pathname,filename,ext]=fileparts(input_file);
 	output_file=fullfile(pathname,store_dir,[ filename file_suffix '.mat']);
-
-	if exist(output_file,'file'), continue; end
-	disp(['Computing features for ' input_file]);
-
-	% simply read in the file and score it
-	% getfield hack to get around parfor errors
-
-	switch lower(ext)
-		case '.mat'
-			% use custom loading function
-			
-			if ~isempty(audio_load)
-				[audio_data,audio_fs]=audio_load{i}(input_file);
-				if isempty(audio_data)
-					warning('No audio data found in file %s',input_file);
-					continue;
-				end
-			else
-				error('No custom loading function detected for .mat files.');
-			end
-			
-		case '.wav'
-
-			[audio_data,audio_fs]=wavread(input_file);
-	end
 	
-	if length(audio_data)<len
-		warning('Sound extraction too short in %s, skipping...',input_file);
-		continue;
+	if bytedif==0 & ~exist(output_file,'file')
+
+		fprintf('Computing features for %s\n',input_file);
+
+		% simply read in the file and score it
+		% getfield hack to get around parfor errors
+
+		switch lower(ext)
+			case '.mat'
+				
+				% use custom loading function
+				
+				%if ~isempty(audio_load)
+				%	[audio_data,audio_fs]=audio_load{i}(input_file);
+				%else	
+				%	fprintf('No loading function found for file %s\n',input_file);
+				%	audio_data=[];
+				%	audio_fs=[];
+				%end
+
+				tmp=load(input_file,'audio');
+				audio_data=tmp.audio.data;
+				audio_fs=tmp.audio.fs;
+
+				
+			case '.wav'
+
+				[audio_data,audio_fs]=wavread(input_file);
+		end
+		
+		if length(audio_data)>=len
+		
+			%fprintf('Test\n');
+
+			[sound_features,parameters]=zftftb_song_score(audio_data,audio_fs,...
+				'len',len(i),'overlap',overlap(i),'filter_scale',filter_scale(i),...
+				'downsampling',downsampling(i),'song_band',song_band(i,:),'spec_sigma',spec_sigma(i),...
+				'norm_amp',norm_amp(i));
+
+			% save for posterity's sake
+
+			zftftb_par_save(output_file,sound_features,parameters);
+		else
+			fprintf('Data segment too short, skipping...\n');
+		end
+
 	end
-
-	[sound_features,parameters]=zftftb_song_score(audio_data,audio_fs,...
-		'len',len(i),'overlap',overlap(i),'filter_scale',filter_scale(i),...
-		'downsampling',downsampling(i),'song_band',song_band(i,:),'spec_sigma',spec_sigma(i),...
-		'norm_amp',norm_amp(i));
-
-	% save for posterity's sake
-
-	par_save(output_file,sound_features,parameters);
-
-
 end
