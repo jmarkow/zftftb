@@ -157,7 +157,7 @@ for i=1:length(listing)
 			
 		case '.wav'
 
-			[audio_data,audio_fs]=wavread(input_file);
+			[audio_data,audio_fs]=wavread(fullfile(DIR,input_file));
 	end
 
 	disp('Entering song detection...');
