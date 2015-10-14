@@ -84,7 +84,6 @@ else
 	pow_detvec=conv(double(song<pow_thresh),mov_filt,'same');
 end
 
-
 % where is the threshold exceeded for both the raw power and the ratio?
 
 pow_idx=pow_detvec>songpow_thresh;
