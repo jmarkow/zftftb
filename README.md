@@ -5,7 +5,7 @@ This is a MATLAB toolbox of time-frequency tools, some of which are based on the
 # Table of Contents
 
 1. [Requirements](#requirements)
-2. [Spectrograms](#spectrograms) 
+2. [Spectrograms](#spectrograms)
 3. [Sound clustering](#sound-clustering)
 4. [Spectral density images](#spectral-density-images)
 5. [Quantifying sound similarity](#sound-similarity)
@@ -14,7 +14,7 @@ This is a MATLAB toolbox of time-frequency tools, some of which are based on the
 
 ###Requirements
 
-This has been tested using MATLAB 2010A and later on Windows and Mac (Linux should be fine). You must have the [markolab](https://github.com/jmarkow/markolab) toolbox in your MATLAB path. The only MATLAB Toolbox required is the Signal Processing toolbox. 
+This has been tested using MATLAB 2010A and later on Windows and Mac (Linux should be fine). You must have the [markolab](https://github.com/jmarkow/markolab) toolbox in your MATLAB path. The only MATLAB Toolbox required is the Signal Processing toolbox.
 
 ###Spectrograms
 
@@ -27,7 +27,7 @@ To generate a spectrogram, use the function zftftb_pretty_sonogram, which comput
 >>axis xy;
 ```
 
-The `len` and `overlap` parameters set the length and overlap of the STFT to 80 and 79.5 milliseconds, respectively.  Clipping sets the lower and upper clip to -2 and 2 (in log units).
+The `len` and `overlap` parameters set the length and overlap of the STFT to 80 and 79.5 milliseconds, respectively.  Clipping sets the lower and upper clip to -2 and 2 (in logn units).
 
 ###Sound Clustering
 
@@ -36,23 +36,3 @@ UNDER CONSTRUCTION
 ###Spectral Density Images
 
 ###Song detection
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
