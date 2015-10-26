@@ -1,6 +1,6 @@
 function [IMAGE,F,T]=zftftb_pretty_sonogram(SIGNAL,FS,varargin)
-%zftftb_pretty_sonogram computes a simple 2-taper spectrogram using the 
-%Gauss window and derivative of Gauss (the basis for reassignment). 
+%zftftb_pretty_sonogram computes a simple 2-taper spectrogram using the
+%Gauss window and derivative of Gauss (the basis for reassignment).
 %
 %	zftftb_pretty_sonogram(SIGNAL,FS,varargin)
 %
@@ -14,7 +14,7 @@ function [IMAGE,F,T]=zftftb_pretty_sonogram(SIGNAL,FS,varargin)
 %
 %		tscale
 %		time scale for Gaussian window for the Gabor transform (in ms, default: 1.5)
-%	
+%
 %		len
 %		fft window length (in ms, default: 34)
 %
@@ -31,7 +31,7 @@ function [IMAGE,F,T]=zftftb_pretty_sonogram(SIGNAL,FS,varargin)
 %		normalize microphone amplitude to 1 (default: 1)
 %
 %		zeropad
-%		zeropadding of the signal ([] for none, 0 to set to len/2, >0 for zeropad, 
+%		zeropadding of the signal ([] for none, 0 to set to len/2, >0 for zeropad,
 %		default: [])
 %
 %		postproc
@@ -62,6 +62,7 @@ norm_amp=0; % normalize amplitude?
 filtering=[];
 clipping=[-2 2]; % clipping
 saturation=.8; % image saturation (0-1)
+units='ln'; % units for clipping (ln for natural log, db for db)
 
 if mod(nparams,2)>0
 	error('Parameters must be specified as parameter/value pairs!');
@@ -83,8 +84,8 @@ for i=1:2:nparams
 			low=varargin{i+1};
 		case 'high'
 			high=varargin{i+1};
-        	case 'zeropad'
-            		zeropad=varargin{i+1};
+    case 'zeropad'
+			zeropad=varargin{i+1};
 		case 'norm_amp'
 			norm_amp=varargin{i+1};
 		case 'filtering'
@@ -93,6 +94,8 @@ for i=1:2:nparams
 			clipping=varargin{i+1};
 		case 'saturation'
 			saturation=varargin{i+1};
+		case 'units'
+			units=varargin{i+1};
 		otherwise
 	end
 end
@@ -151,30 +154,41 @@ sigma=(tscale/1e3)*FS;
 w = exp(-(t/sigma).^2);
 dw = -2*w.*(t/(sigma^2));
 
-% take the two spectrogram, use simple multi-taper approach
+% take the two spectrograms, use simple "multi-taper" approach
 
 [S,F,T]=spectrogram(SIGNAL,w,overlap,nfft,FS);
 [S2]=spectrogram(SIGNAL,dw,overlap,nfft,FS);
 
+% convert to user-designated units
+
+switch lower(units)
+	case 'ln'
+		IMAGE=log((abs(S)+abs(S2))/2);
+	case 'db'
+		IMAGE=20*log10((abs(S)+abs(S2))/2);
+	otherwise
+		IMAGE=(abs(S)+abs(S2))/2;
+end
+
+% postproc is generally useful for writing out to an image directly
+
 % slightly elaborate way of clipping and normalizing,
 % leaving intact for now to retain legacy compatibility
 
-if lower(postproc(1))=='y'	
-	
-    IMAGE=log((abs(S)+abs(S2))/2);
-    
+if lower(postproc(1))=='y'
+
 	if length(clipping)==1
 		clipping=[clipping max(IMAGE(:))];
 	end
 
-	
+	% clip, map from [0,1]
+
 	IMAGE=min(IMAGE,clipping(2));
 	IMAGE=max(IMAGE,clipping(1));
 	IMAGE=(IMAGE-clipping(1));
 	IMAGE=IMAGE./max(IMAGE(:)); % scale from 0 to 1
 	IMAGE=IMAGE*saturation;
-else
-	IMAGE=(abs(S)+abs(S2))/2; 
+
 end
 
 % if auto zeropad, shift time vector (otherwise let the user do it)
@@ -182,5 +196,3 @@ end
 if autopad==1
     T=T-zeropad/FS;
 end
-
-
