@@ -28,7 +28,7 @@ end
 len=68;
 overlap=67;
 tscale=1.5;
-nfft=68;
+nfft=[];
 
 nparams=length(varargin);
 
@@ -48,6 +48,10 @@ for i=1:2:nparams
 			tscale=varargin{i+1};
 		otherwise
 	end
+end
+
+if isempty(nfft)
+	nfft=len;
 end
 
 len=round((len/1e3)*FS);

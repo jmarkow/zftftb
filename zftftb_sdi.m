@@ -12,10 +12,10 @@ function [SDI F T CONTOURS]=zftftb_sdi(MIC_DATA,FS,varargin)
 %	sampling frequency (default: 48e3)
 %
 %	the following may be specified as parameter/value pairs:
-%		
+%
 %		tscale
 %		time scale for Gaussian window for the Gabor transform (in ms, default: 1.5)
-%	
+%
 %		len
 %		fft window length (in ms, default: 34)
 %
@@ -49,13 +49,13 @@ function [SDI F T CONTOURS]=zftftb_sdi(MIC_DATA,FS,varargin)
 %
 %		T
 %		vector with time points (in s)
-%		
+%
 %		contours
 %		frequency x time x trial matrix of contours
 %
 %	example:
 %
-%	To take a sample x trials matrix (double) of aligned microphone traces with a 24 kHz 
+%	To take a sample x trials matrix (double) of aligned microphone traces with a 24 kHz
 %	sampling rate and generate the SDI run,
 %
 %	[sdi f t]=zftftb_sdi(mic_signals,24e3);
@@ -71,8 +71,6 @@ function [SDI F T CONTOURS]=zftftb_sdi(MIC_DATA,FS,varargin)
 %	See also zftftb_contour_approx.m
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETER COLLECTION %%%%%%%%%%%%%%%%%
-
-
 
 if nargin<2
 	disp('Setting FS to 48e3...');
@@ -94,12 +92,12 @@ if mod(nparams,2)>0
 end
 
 tscale=1.5;
-len=34;
-nfft=34;
+len=34; % spectrogram parameters are in ms
+nfft=[];
 overlap=33;
 filtering=500; % highpass for mic trace
 mask_only=0;
-spect_thresh=.75;
+spect_thresh=.78;
 norm_amp=1;
 weighting='log';
 
@@ -116,10 +114,10 @@ for i=1:2:nparams
 		case 'filtering'
 			filtering=varargin{i+1};
 		case 'mask_only'
-		    	mask_only=varargin{i+1};
+			mask_only=varargin{i+1};
 		case 'spect_thresh'
-		    	spect_thresh=varargin{i+1};
-	    	case 'norm_amp'
+			spect_thresh=varargin{i+1};
+		case 'norm_amp'
 			norm_amp=varargin{i+1};
 		case 'weighting'
 			weighting=varargin{i+1};
@@ -131,7 +129,7 @@ end
 % compute the contour histogram
 % normalize the mic trace
 
-% 
+%
 
 [nsamples,ntrials]=size(MIC_DATA);
 
@@ -147,7 +145,7 @@ if norm_amp
 end
 
 [rmask_pre imask_pre spect]=zftftb_contour_approx(MIC_DATA(:,1),FS,...
-	'len',len,'overlap',overlap,'tscale',tscale,'nfft',nfft);
+'len',len,'overlap',overlap,'tscale',tscale,'nfft',nfft);
 
 if mask_only
 	RMASK=rmask_pre./ntrials;
@@ -176,7 +174,8 @@ disp('Computing contours (go grab a coffee/beer, this will take a minute)...');
 parfor i=2:ntrials
 
 	weights=[];
-	[rmask_pre imask_pre spect]=zftftb_contour_approx(MIC_DATA(:,i),FS,'len',len,'overlap',overlap,'tscale',tscale,'nfft',nfft);
+	[rmask_pre imask_pre spect]=zftftb_contour_approx(MIC_DATA(:,i),FS,...
+		'len',len,'overlap',overlap,'tscale',tscale,'nfft',nfft);
 
 	% log weighting
 
