@@ -91,7 +91,7 @@ if length(norm_amp)==1, norm_amp=repmat(norm_amp,[1 nhits]); end
 
 if length(audio_load)==1
 
-	if iscell(audio_load)	
+	if iscell(audio_load)
 		audio_load=repmat(audio_load,[1 nhits]);
 	else
 		tmp={audio_load};
@@ -100,7 +100,7 @@ if length(audio_load)==1
 	end
 end
 
-% loading via anonymous function does not work in ver >=MATLAB2013a 
+% loading via anonymous function does not work in ver >=MATLAB2013a
 
 parfor i=1:nhits
 
@@ -129,7 +129,7 @@ parfor i=1:nhits
 
 	[pathname,filename,ext]=fileparts(input_file);
 	output_file=fullfile(pathname,store_dir,[ filename file_suffix '.mat']);
-	
+
 	if bytedif==0 & ~exist(output_file,'file')
 
 		fprintf('Computing features for %s\n',input_file);
@@ -139,12 +139,12 @@ parfor i=1:nhits
 
 		switch lower(ext)
 			case '.mat'
-				
+
 				% use custom loading function
-				
+
 				%if ~isempty(audio_load)
 				%	[audio_data,audio_fs]=audio_load{i}(input_file);
-				%else	
+				%else
 				%	fprintf('No loading function found for file %s\n',input_file);
 				%	audio_data=[];
 				%	audio_fs=[];
@@ -154,14 +154,17 @@ parfor i=1:nhits
 				audio_data=tmp.audio.data;
 				audio_fs=tmp.audio.fs;
 
-				
-			case '.wav'
 
-				[audio_data,audio_fs]=wavread(input_file);
+			case '.wav'
+				if verLessThan('matlah','8')
+					[audio_data,audio_fs]=wavread(input_file);
+				else
+					[audio_data,audio_fs]=audioread(input_file);
+				end
 		end
-		
+
 		if length(audio_data)>=len
-		
+
 			%fprintf('Test\n');
 
 			[sound_features,parameters]=zftftb_song_score(audio_data,audio_fs,...

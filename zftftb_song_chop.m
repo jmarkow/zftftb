@@ -29,7 +29,7 @@ function zftftb_song_chop(DIR,varargin)
 %
 %		song_thresh
 %		threshold on smoothed song_ratio (default: .1)
-%	
+%
 %		custom_load
 %		anonymous functionf or loading MATLAB data (default: '')
 %
@@ -41,7 +41,7 @@ function zftftb_song_chop(DIR,varargin)
 %
 %		colors
 %		MATLAB colormap to use for spectrograms (default: 'hot');
-%		
+%
 %		disp_band
 %		frequency band to display for spectrogram export (default: [1 9e3]);
 %
@@ -142,22 +142,26 @@ for i=1:length(listing)
 
 	input_file=listing{i};
 	disp([input_file])
-	
+
 	[pathname,filename,ext]=fileparts(input_file);
-	
+
 	switch lower(ext)
 		case '.mat'
 			% use custom loading function
-			
+
 			if ~isempty(custom_load)
 				[audio_data,audio_fs]=custom_load(input_file);
 			else
 				error('No custom loading function detected for .mat files.');
 			end
-			
-		case '.wav'
 
-			[audio_data,audio_fs]=wavread(fullfile(DIR,input_file));
+		case '.wav'
+			if verLessThan('matlab','8')
+				[audio_data,audio_fs]=wavread(fullfile(DIR,input_file));
+			else
+				[audio_data,audio_fs]=audioread(fullfile(DIR,input_file));
+			end
+
 	end
 
 	disp('Entering song detection...');
@@ -171,23 +175,23 @@ for i=1:length(listing)
 
 	% interpolate song detection to original space, collate idxs
 
-	detection=interp1(song_t,double(song_bin),raw_t,'nearest'); 
+	detection=interp1(song_t,double(song_bin),raw_t,'nearest');
 	ext_pts=markolab_collate_idxs(detection,round(audio_pad*audio_fs));
 
 	for j=1:size(ext_pts,1)
 
 		% grab chunk if possible
-		
+
 		curr_ext=ext_pts(j,:);
-		export_file=[ filename '_chunk_' num2str(j) ];	
-		
+		export_file=[ filename '_chunk_' num2str(j) ];
+
 		if curr_ext(1)>0 & curr_ext(2)<audio_len
 
 			% now we're extracting
 			%
 
 			extraction=audio_data(curr_ext(1):curr_ext(2));
-			
+
 			if export_wav
 
 				tmp=extraction;
@@ -201,8 +205,11 @@ for i=1:length(listing)
 					tmp=tmp/(max_audio*(1+1e-3));
 				end
 
-				wavwrite(tmp,audio_fs,fullfile(DIR,'chop_data','wav',[ export_file '.wav' ]));
-
+				if verLessThan('matlab','8')
+					wavwrite(tmp,audio_fs,fullfile(DIR,'chop_data','wav',[ export_file '.wav' ]));
+				else
+					audiowrite(fullfile(DIR,'chop_data','wav',[ export_file '.wav']),tmp,audio_fs);
+				end
 
 			end
 

@@ -10,12 +10,12 @@ function zftftb_song_clust(DIR,varargin)
 %
 %
 %		disp_band(1)
-%		
+%
 %		colors
 %		colormap for template spectrogram (default: hot)
 %
 %		padding
-%		padding to the left/right of extractions (two element vector in s, default: [])	
+%		padding to the left/right of extractions (two element vector in s, default: [])
 %
 %		len
 %		spectral feature score spectrogram window (in ms, default: 34)
@@ -73,7 +73,7 @@ export_wav=1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% CLASSIFICATION FEATURES NAME %%%%%%%
 
-property_names={'cos','derivx', 'derivy', 'amp','product','curvature'}; 
+property_names={'cos','derivx', 'derivy', 'amp','product','curvature'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETER COLLECTION  %%%%%%%%%%%%%%
@@ -214,7 +214,7 @@ if exist(fullfile(proc_dir,'cluster_data.mat'),'file')
 	disp('Looks like you have computed the scores before...');
 
 	while isempty(response)
-		response=input('Would you like to (r)ecompute or (s)kip to clustering?  ','s');	
+		response=input('Would you like to (r)ecompute or (s)kip to clustering?  ','s');
 		switch (lower(response))
 			case 'r'
 				skip=0;
@@ -242,7 +242,7 @@ if ~skip
 	[hits.locs,hits.features,hits.file_list]=zftftb_template_match(template.features,DIR,'file_filt',file_filt);
 
 	% convert hit locations to points in file
-	
+
 
 	save(fullfile(proc_dir,'cluster_data.mat'),'hits');
 
@@ -258,7 +258,7 @@ if exist(fullfile(proc_dir,'cluster_results.mat'),'file')
 	disp('Looks like you have clustered the data before..');
 
 	while isempty(response)
-		response=input('Would you like to (r)ecluster or (s)kip?  ','s');	
+		response=input('Would you like to (r)ecluster or (s)kip?  ','s');
 		switch (lower(response))
 			case 'r'
 				skip=0;
@@ -273,9 +273,9 @@ end
 % collect features into matrix, make sure we can map it back to cell
 
 [feature_matrix,file_id,peak_order]=zftftb_hits_to_mat(hits);
-	
+
 if ~skip
-	% concatenate features, pass to cluster cut	
+	% concatenate features, pass to cluster cut
 
 	[~,labels,selection,features_used]=markolab_clust_cut(feature_matrix,property_names);
 
@@ -306,14 +306,14 @@ if train_classifier
 	% quadratic boundaries work the best in this situation
 
 	% two classes, selection, non-selection
-	
+
 	labels(labels~=cluster_choice)=NaN;
 	labels(labels==cluster_choice)=2; % hits are class 2
 	labels(isnan(labels))=1; % non-hits are class 1
 	cluster_choice=2; % what are hits?
 
 	svm_object=svmtrain(feature_matrix(:,features_used),labels,'method','smo','kernel_function','quadratic');
-	
+
 	% specify a classifier function (this will make using other clustering methods simple in the future)
 
 	class_fun=@(FEATURES) svmclassify(svm_object,FEATURES);
@@ -335,7 +335,7 @@ if extract
 		disp('Looks like you have extracted the data before..');
 
 		while isempty(response)
-			response=input('Would you like to (r)eextract or (s)kip?  ','s');	
+			response=input('Would you like to (r)eextract or (s)kip?  ','s');
 			switch (lower(response))
 				case 'r'
 
@@ -361,7 +361,7 @@ if extract
 		end
 
 		if ~skip
-			
+
 			robofinch_extract_data(hits.ext_pts,hits.file_list,proc_dir,'audio_load',audio_load,'data_load',data_load,...
 				'export_wav',export_wav,'export_spectrogram',export_spectrogram,'export_dir',proc_dir);
 

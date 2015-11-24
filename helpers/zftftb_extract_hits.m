@@ -52,7 +52,11 @@ for i=1:length(EXT_PTS)
 
 		case '.wav'
 
-			y=wavread(FILENAMES{i});
+			if verLessThan('matlab','8')
+				y=wavread(FILENAMES{i});
+			else
+				y=audioread(FILENAMES{i});
+			end
 
 		case '.mat'
 
@@ -64,10 +68,10 @@ for i=1:length(EXT_PTS)
 
 	end
 
-	len=length(y);	
+	len=length(y);
 
 	for j=1:size(EXT_PTS{i},1)
-		
+
 		% the startpoint needs to be adjusted using the following formula
 		% peaklocation*(WINDOWLENGTH-OVERLAP)*SUBSAMPLING-WINDOWLENGTH
 
@@ -110,7 +114,11 @@ switch lower(ext)
 
 	case '.wav'
 
-		[y,fs]=wavread(FILENAMES{1});
+		if verLessThan('matlab','8')
+			[y,fs]=wavread(FILENAMES{1});
+		else
+			[y,fs]=audioread(FIlENAMES{1});
+		end
 
 	case '.mat'
 
@@ -158,8 +166,12 @@ for i=1:length(EXT_PTS)
 
 		case '.wav'
 
-			[y,fs]=wavread(FILENAMES{i});
-			
+			if verLessThan('matlab','8')
+				[y,fs]=wavread(FILENAMES{i});
+			else
+				[y,fs]=audioread(FILENAMES{i});
+			end
+
 		case '.mat'
 
 			if ~isempty(audio_load)
@@ -181,7 +193,7 @@ for i=1:length(EXT_PTS)
 	[pathname,filename,ext]=fileparts(FILENAMES{i});
 
 	% get bout structure for file
-	
+
 
 	[b,a]=ellip(5,.2,40,[500]/(fs/2),'high');
 	tmp=filtfilt(b,a,y);
@@ -189,14 +201,14 @@ for i=1:length(EXT_PTS)
 
 	[song_det,song_det_t]=zftftb_song_det(tmp,fs);
 	raw_t=[1:len]/fs;
-	
+
 	detection=interp1(song_det_t,double(song_det),raw_t,'nearest');
 
 	bouts=markolab_collate_idxs(detection,round(.1*fs));
 	nbouts=size(bouts,1);
 
 	bout_count=ones(1,size(EXT_PTS{i},1))*NaN;
-	
+
 	for j=1:size(EXT_PTS{i},1)
 
 		startpoint=EXT_PTS{i}(j,1);
@@ -226,7 +238,7 @@ for i=1:length(EXT_PTS)
 
 		motif_count(j)=find(idx==j);
 		motif_total(j)=sum(bout_count==bout_count(j));
-	
+
 	end
 
 	for j=1:size(EXT_PTS{i},1)
@@ -237,14 +249,14 @@ for i=1:length(EXT_PTS)
 		if startpoint>0 && endpoint<=len
 
 			USED_FILENAMES{end+1}=FILENAMES{i};
-			AUDIO.data(:,trial)=single(y(startpoint:endpoint));               	
+			AUDIO.data(:,trial)=single(y(startpoint:endpoint));
 			AUDIO.bout_count(trial)=bout_count(j);
-			AUDIO.motif_total(trial)=motif_total(j);	
+			AUDIO.motif_total(trial)=motif_total(j);
 			AUDIO.motif_count(trial)=motif_count(j);
 			AUDIO.filename{trial}=FILENAMES{i};
 
 			if ~isempty(y2)
-				
+
 				for k=1:nchannels
 					DATA.data(:,trial,k)=single(y2(startpoint:endpoint,k));
 				end
@@ -270,7 +282,11 @@ for i=1:length(EXT_PTS)
 					tmp=tmp/(max_audio*(1+1e-3));
 				end
 
-				wavwrite(tmp,AUDIO.fs,fullfile(export_dir,'wav',[ export_file '.wav' ]));
+				if verLessThan('matlab','8')
+					wavwrite(tmp,AUDIO.fs,fullfile(export_dir,'wav',[ export_file '.wav' ]));
+				else
+					audiowrite(fullfile(export_dir,'wav',[export_file '.wav']),tmp,AUDIO.fs);
+				end
 			end
 
 			if export_spectrogram
