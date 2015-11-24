@@ -8,9 +8,6 @@ function zftftb_song_clust(DIR,varargin)
 %
 %	the following may be specified as parameter/value pairs:
 %
-%
-%		disp_band(1)
-%
 %		colors
 %		colormap for template spectrogram (default: hot)
 %
@@ -40,7 +37,6 @@ function zftftb_song_clust(DIR,varargin)
 %		ls filter used to find data files (e.g. '*.wav' for all wav files '*.mat' for all mat)
 %
 %
-%
 %See also zftftb_song_score.m, zftftb_pretty_sonogram.m
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -65,6 +61,7 @@ audio_load='';
 data_load='';
 file_filt='auto'; % if set to auto, will check for the auto file type, first file wins
 extract=1;
+clust_lim=1e4; % number of points to display for cluster cut
 
 % TODO: add option to make spectrograms and wavs of all extractions
 
@@ -116,6 +113,8 @@ for i=1:2:nparams
 			norm_amp=varargin{i+1};
 		case 'extract'
 			extract=varargin{i+1};
+		case 'clust_lim'
+			clust_lim=varargin{i+1};
 	end
 end
 
@@ -277,7 +276,7 @@ end
 if ~skip
 	% concatenate features, pass to cluster cut
 
-	[~,labels,selection,features_used]=markolab_clust_cut(feature_matrix,property_names);
+	[~,labels,selection,features_used]=markolab_clust_cut(feature_matrix,property_names,[],clust_lim);
 
 	% now each row of feature matrix correspond to file id, which corresponds to file list
 
@@ -361,13 +360,8 @@ if extract
 		end
 
 		if ~skip
-
 			robofinch_extract_data(hits.ext_pts,hits.file_list,proc_dir,'audio_load',audio_load,'data_load',data_load,...
 				'export_wav',export_wav,'export_spectrogram',export_spectrogram,'export_dir',proc_dir);
-
-			%[agg_audio agg_data used_filenames]=zftftb_extract_hits(hits.ext_pts,hits.file_list,'export_wav',export_wav,...
-			%	'export_spectrogram',export_spectrogram,'export_dir',proc_dir,'audio_load',audio_load,'data_load',data_load);
-			%save(fullfile(proc_dir,'extracted_data.mat'),'agg_audio','agg_data','used_filenames','-v7.3');
 		end
 
 
