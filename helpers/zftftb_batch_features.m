@@ -156,7 +156,7 @@ parfor i=1:nhits
 
 
 			case '.wav'
-				if verLessThan('matlah','8')
+				if verLessThan('matlab','8')
 					[audio_data,audio_fs]=wavread(input_file);
 				else
 					[audio_data,audio_fs]=audioread(input_file);
