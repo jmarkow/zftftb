@@ -170,7 +170,7 @@ if strcmp(lower(weighting(1:3)),'non')
 end
 
 disp('Computing contours (go grab a coffee/beer, this will take a minute)...');
-
+disp(['Contour weighting:  ' weighting]);
 parfor i=2:ntrials
 
 	weights=[];
