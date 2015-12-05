@@ -1,4 +1,4 @@
-function [EXTRACTED_SOUND,EXTRACTED_IMAGE,TIME_POINTS,EXTRACT_IDXS]=zftftb_spectro_navigate(DATA,FS)
+function [EXTRACTED_SOUND,EXTRACTED_IMAGE,TIME_POINTS,EXTRACT_IDXS,FREQ_POINTS]=zftftb_spectro_navigate(DATA,FS)
 %simple GUI for selecting time points in sound data based on the spectrogram
 %
 %	[EXTRACTED_SOUND,EXTRACTED_IMAGE]=zftftb_spectro_navigate(DATA,FS)
@@ -10,7 +10,7 @@ function [EXTRACTED_SOUND,EXTRACTED_IMAGE,TIME_POINTS,EXTRACT_IDXS]=zftftb_spect
 %	sampling rate
 %
 %the program returns the following output:
-%	
+%
 %	EXTRACTED_SOUND
 %	the selected sound data
 %
@@ -55,8 +55,7 @@ overview_img=imshow(uint8(sonogram_im),hot);
 overview_scroll=imscrollpanel(overview_fig,overview_img);
 api_scroll=iptgetapi(overview_scroll);
 
-vis_rect=api_scroll.getVisibleImageRect()
-
+vis_rect=api_scroll.getVisibleImageRect();
 imoverview(overview_img);
 
 EXTRACTED_SOUND=[];
@@ -68,18 +67,25 @@ while isempty(EXTRACTED_SOUND)
 	rect_position=wait(rect_handle);
 
 	if rect_position(1)<1, rect_position(1)=1; end
-	
-	selected_width=round(rect_position(1)+rect_position(3));
+	if rect_position(2)<1, rect_position(2)=1; end
+
+	rect_position=round(rect_position);
+
+	selected_width=rect_position(1)+rect_position(3);
+	selected_height=rect_position(2)+rect_position(4);
 
 	if selected_width>width, selected_width=width; end
+	if selected_height>=height, selected_height=height-1; end
 
-	EXTRACTED_IMAGE=sonogram_im(:,rect_position(1):selected_width);	
-	
+	EXTRACTED_IMAGE=sonogram_im(:,rect_position(1):selected_width);
+
 	TIME_POINTS=t(rect_position(1):selected_width);
+	FREQ_POINTS=f(end-selected_height:end-rect_position(2));
+
 	EXTRACT_IDXS=round([TIME_POINTS(1)*FS TIME_POINTS(end)*FS]);
 
 	temp_fig=figure('Toolbar','None','Menubar','None');imshow(uint8(EXTRACTED_IMAGE),hot);
-	
+
 	validate=[];
 	while isempty(validate)
 		validate=input('(D)one or (c)ontinue selecting?  ','s');
