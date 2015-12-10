@@ -27,11 +27,28 @@ To generate a spectrogram, use the function zftftb_pretty_sonogram, which comput
 >>axis xy;
 ```
 
-The `len` and `overlap` parameters set the length and overlap of the STFT to 80 and 79.5 milliseconds, respectively.  Clipping sets the lower and upper clip to -2 and 2 (in logn units).
+The `len` and `overlap` parameters set the length and overlap of the STFT to 80 and 79.5 milliseconds, respectively.  Clipping sets the lower and upper clip to -2 and 2 (in logn units, this is the default for legacy compatibility, set the option 'units' to 'dB' to work in decibels).
+
+| Parameter | Description | Format | Options | Default |
+|-----------|-------------|--------|---------|---------|
+| `overlap` | STFT overlap (ms) | integer | N/A | `67` |
+| `len` | STFT window length (ms) | integer | N/A | `70` |
+| `nfft` | FFT size (samples) | integer | empty to set automatically | `` |
+| `zeropad` | Zero-pad (samples)| integer | integer, or 0 for auto-pad, empty for no zeropad | `` |
+| `filtering` | High-pass filter corner Fs (5-pole Elliptic) | float | empty for no filtering | `` |
+| `clipping` | Spectrogram clipping (logn units) | 2 element vector, floats | N/A | [-2 2] |
+| `units` | Set spectrogram units | string | 'ln','db', otherwise linear | 'ln' |
+| `postproc` | Prettify spectrogram (non-linear) | string | 'y','n' | 'y' |
+| `saturation` | Image saturation (brightness of image, only use with postproc on) | float | [0-1] | '.8' |
+
 
 ###Sound Clustering
 
-UNDER CONSTRUCTION
+Sound clustering is performed with zftftb_song_clust, which computes the Euclidean distance between features computed for a user-defined template, and a set of audio files.  It will work with data saved in .mat files (requires a function to point to location of the data and sampling rate), or audio files.  To cluster a set of .wav files use the following command
+
+```
+zftftb_song_clust;
+```
 
 ###Spectral Density Images
 
