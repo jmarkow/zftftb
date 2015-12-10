@@ -120,6 +120,9 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DIRECTORY CHECK %%%%%%%%%%%%%%%%%%%%
 
+if nargin<1 | isempty(DIR)
+	DIR=pwd;
+end
 
 if strcmp(lower(file_filt),'auto')
 
@@ -142,10 +145,6 @@ if strcmp(lower(file_filt),'auto')
 	file_filt=[ '*' ext ];
 	disp(['File filter:  ' file_filt ]);
 
-end
-
-if nargin<1 | isempty(DIR)
-	DIR=pwd;
 end
 
 proc_dir=zftftb_directory_check(DIR);
