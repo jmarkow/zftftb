@@ -1,4 +1,4 @@
-function [EXTRACTED_SOUND,EXTRACTED_IMAGE,TIME_POINTS,EXTRACT_IDXS,FREQ_POINTS]=zftftb_spectro_navigate(DATA,FS)
+function [EXTRACTED_SOUND,EXTRACTED_IMAGE,TIME_POINTS,EXTRACT_IDXS,FREQ_POINTS]=zftftb_spectro_navigate(DATA,FS,WIDTH,HEIGHT)
 %simple GUI for selecting time points in sound data based on the spectrogram
 %
 %	[EXTRACTED_SOUND,EXTRACTED_IMAGE]=zftftb_spectro_navigate(DATA,FS)
@@ -21,6 +21,14 @@ function [EXTRACTED_SOUND,EXTRACTED_IMAGE,TIME_POINTS,EXTRACT_IDXS,FREQ_POINTS]=
 %	two element vector indicating the left/right edges of the selected segment
 %
 %
+
+if nargin<4
+	HEIGHT=[];
+end
+
+if nargin<3
+	WIDTH=[];
+end
 
 if nargin<2
 	disp('Setting FS to 48e3...');
@@ -60,7 +68,26 @@ imoverview(overview_img);
 
 EXTRACTED_SOUND=[];
 
-rect_handle=imrect(get(overview_fig,'CurrentAxes'),[vis_rect(1)+30 vis_rect(2)+30 vis_rect(3)/2.5 vis_rect(4)-20]);
+initial_position=[vis_rect(1)+30 vis_rect(2)+30 vis_rect(3)/2.5 vis_rect(4)-20];
+
+if ~isempty(WIDTH)
+
+	% width specified in time, how many pixels?
+
+	timestep=mean(diff(t));
+	width_pixels=round(WIDTH./timestep);
+	initial_position(3)=width_pixels;
+end
+
+if ~isempty(HEIGHT)
+	initial_position(4)=HEIGHT;
+end
+
+rect_handle=imrect(get(overview_fig,'CurrentAxes'),initial_position);
+
+if ~isempty(WIDTH) & ~isempty(HEIGHT)
+	setResizable(rect_handle,false);
+end
 
 while isempty(EXTRACTED_SOUND)
 

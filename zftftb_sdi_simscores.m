@@ -4,7 +4,7 @@ function [SCORES]=zftftb_sdi_simscore(CONTOUR_GROUP1,CONTOUR_GROUP2,F,T,varargin
 %the *expected* difference in similarity scores for sounds from the same *group*
 %
 %	[SCORES]=zftftb_sdi_simscore(CONTOUR_GROUP1,CONTOUR_GROUP2,F,T,varargin)
-%	
+%
 %	CONTOUR_GROUP1
 %	3D matrix of contours returned by zftftb_sdi (either the re or im field)
 %
@@ -49,9 +49,9 @@ function [SCORES]=zftftb_sdi_simscore(CONTOUR_GROUP1,CONTOUR_GROUP2,F,T,varargin
 %
 %	dprime=(mean(scores{1,1})-mean(scores{2,1}))./std([scores{1,1};scores{2,1}])
 %
-%	This returns a dprime-like measure to compare the difference between the first and second group. Given the sensitivity 
-%	of the measure (0-.4 tends to indicate no effect, >.6 a moderate effect, >1 a strong effect).  It's advised to run a 
-%	bootstrap to determine a rigorous cutoff. 
+%	This returns a dprime-like measure to compare the difference between the first and second group. Given the sensitivity
+%	of the measure (0-.4 tends to indicate no effect, >.6 a moderate effect, >1 a strong effect).  It's advised to run a
+%	bootstrap to determine a rigorous cutoff.
 
 
 nparams=length(varargin);
@@ -109,6 +109,9 @@ disp('Forming probability densities...');
 sdi1=mean(CONTOUR_GROUP1,3);
 sdi2=mean(CONTOUR_GROUP2,3);
 
+norm1=sum(sdi1(:).^2);
+norm2=sum(sdi2(:).^2);
+
 % get the self-sim scores
 
 SCORES=cell(2,2);
@@ -123,11 +126,17 @@ SCORES{2,2}=zeros(trials2,1);
 disp('Computing scores for group 1...');
 
 for i=1:trials1
-	SCORES{1,1}(i)=sum(sum(CONTOUR_GROUP1(:,:,i).*sdi1));
-	SCORES{1,2}(i)=sum(sum(CONTOUR_GROUP1(:,:,i).*sdi2));
+	tmp=CONTOUR_GROUP1(:,:,i);
+	tmp_norm=sum(tmp(:).^2);
+	SCORES{1,1}(i)=sum(sum(tmp.*sdi1))./sqrt(norm1*tmp_norm);
+	SCORES{1,2}(i)=sum(sum(tmp.*sdi2))./sqrt(norm2*tmp_norm);
 end
 
+disp('Computing scores for group 2...');
+
 for i=1:trials2
-	SCORES{2,1}(i)=sum(sum(CONTOUR_GROUP2(:,:,i).*sdi1));
-	SCORES{2,2}(i)=sum(sum(CONTOUR_GROUP2(:,:,i).*sdi2));
+	tmp=CONTOUR_GROUP2(:,:,i);
+	tmp_norm=sum(tmp(:).^2);
+	SCORES{2,1}(i)=sum(sum(tmp.*sdi1))./sqrt(norm1*tmp_norm);
+	SCORES{2,2}(i)=sum(sum(tmp.*sdi2))./sqrt(norm2*tmp_norm);
 end
