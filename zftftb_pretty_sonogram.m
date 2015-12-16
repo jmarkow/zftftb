@@ -194,6 +194,6 @@ end
 % if auto zeropad, shift time vector (otherwise let the user do it)
 
 if autopad==1
-    disp('Adjusting time-axis to account for zero pad');
+    %disp('Adjusting time-axis to account for zero pad');
     T=T-zeropad/FS;
 end
