@@ -2,3 +2,7 @@
 _build
 _static
 _templates
+# OS X
+.DS_Store
+.AppleDouble
+.LSOverride
