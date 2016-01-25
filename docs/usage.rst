@@ -15,7 +15,7 @@ To generate a spectrogram, use the function :code:`zftftb_pretty_sonogram`, whic
   >>imagesc(t,f,s);
   >>axis xy;
 
-The :code:`len` and :code:`overlap` parameters set the length and overlap of the STFT to 80 and 79.5 milliseconds, respectively. Clipping sets the lower and upper clip to -2 and 2 (in logn units, this is the default for legacy compatibility, set the option 'units' to 'dB' to work in decibels).  Parameters for this function are given below.
+The :code:`len` and :code:`overlap` parameters set the length and overlap of the STFT to 80 and 79.5 milliseconds, respectively. Clipping sets the lower and upper clip to -2 and 2 (in logn units, this is the default for legacy compatibility, set the option 'units' to 'dB' to work in decibels).  All options given after the first two, the audio data and the sampling rate, are treated as parameter/value pairs.  
 
 +------------+----------------------------------------------------------+----------+---------------------+------------+
 | Parameter  | Description                                              | Format   | Options             | Default    |
@@ -42,7 +42,7 @@ The :code:`len` and :code:`overlap` parameters set the length and overlap of the
 Sound clustering
 ----------------
 
-Sound clustering is performed with ``zftftb_song_clust``, which computes the Euclidean distance between features computed for a user-defined template, and a set of audio files.  The basic workflow is as follows:  (1) spectral features are computed for all files in a director, (2) the Euclidean distance between a template and the files is computed, (3) the user selects hits based on the distance measure.  Results for a particular template are stored in a sub-directory of your choice.  You can go back to this directory and re-run any stage of the process without having to recompute the other stages (examples are given below).  It will work with data saved in .mat files (requires a function to point to location of the data and sampling rate), or audio files.
+Sound clustering is performed with ``zftftb_song_clust``, which computes the Euclidean distance between features computed for a user-defined template, and a set of audio files.  The basic workflow is as follows:  (1) spectral features are computed for all files in a director, (2) the Euclidean distance between a template and the files is computed, (3) the user selects hits based on the distance measure.  Results for a particular template are stored in a sub-directory of your choice.  You can go back to this directory and re-run any stage of the process without having to recompute the other stages (examples are given below).  It will work with data saved in .mat files (requires a function to point to location of the data and sampling rate), or audio files.  All options after the first, the directory to process, are passed as parameter/value pairs (see examples below).
 
 #.  To cluster a set of .wav files use the following command.
     ::
@@ -74,7 +74,9 @@ Save it as ``my_audioload.m`` somewhere in your MATLAB path (e.g. ``~/Documents/
 
   >>loading_function=@(FILE) my_audioload(FILE);
 
-Then pass the anonymous function to the ``audio_load`` parameter.  
+Then pass the anonymous function to the ``audio_load`` parameter::
+
+  >>zftftb_song_clust(pwd,'audio_load',loading_function);
 
 
 Parameters for ``zftftb_song_clust`` are given below.
@@ -104,13 +106,13 @@ Parameters for ``zftftb_song_clust`` are given below.
 Extracting songs from mat/wav files
 -----------------------------------
 
-To extract songs from mat/wav files that may contain long segments of silence, use ``zftftb_song_chop``.
+To extract songs from mat/wav files that may contain long segments of silence, use ``zftftb_song_chop``.  The defaults should work
 
 
 Song detection
 --------------
 
-If you have loaded a microphone signal into MATLAB, you can check for time points with singing.  The function returns two outputs, the first is a vector of logicals indicating the presence (TRUE) or absence (FALSE) of song, the second is a vector of timestamps::
+If you have loaded a microphone signal into MATLAB, you can check for time points with singing.  The function returns two outputs, the first is a vector of logicals indicating the presence (TRUE) or absence (FALSE) of song, the second is a vector of timestamps.  The function has two obligatory inputs, the mic data and the sampling rate, all additional options are considered parameter/value pairs.::
 
   >>[y,fs]=wavread('mydata.wav');
   >>[idx,t]=zftftb_song_det(y,fs);
@@ -140,10 +142,11 @@ For example, to use a lower threshold on the ratio of power for song to nonsong 
   >>[idx,t]=zftftb_song_det(y,fs,'song_thresh',.1)
 
 .. _sdi-label:
+
 Spectral density images
 -----------------------
 
-To compute a spectral density image, this uses the technique employed in [PLoSCompBio2013]_. If you would like to use consensus contours, as described in [IEEE2013]_.  The spectral density image takes a *group* of sounds and forms a probability density in time and frequency.  The input is a ``samples x trials`` matrix of doubles and the sampling rate::
+To compute a spectral density image, this uses the technique employed in [PLoSCompBio2013]_. If you would like to use consensus contours, as described in [IEEE2013]_.  The spectral density image takes a *group* of sounds and forms a probability density in time and frequency.  The input is a ``samples x trials`` matrix of doubles and the sampling rate. All options passed after the first two are considered parameter/value pairs::
 
   >>[sdi f t contours]=zftftb_sdi(mic_matrix,fs);
   >>figure();
@@ -151,6 +154,31 @@ To compute a spectral density image, this uses the technique employed in [PLoSCo
   >>axis xy;
 
 This will compute the spectral density image display the *imaginary* contours (``sdi.re`` contains the contours from the *real* component).
+
+
++-------------+---------------------------------------------------------------------+---------+-----------------+-----------+
+| Parameter   | Description                                                         | Format  | Options         | Default   |
++=============+=====================================================================+=========+=================+===========+
+| tscale      | time-scale for Gaussian window (ms)                                 | float   | N/A             | ``1.5``   |
++-------------+---------------------------------------------------------------------+---------+-----------------+-----------+
+| len         | length of Gaussian window (ms)                                      | float   | N/A             | ``34``    |
++-------------+---------------------------------------------------------------------+---------+-----------------+-----------+
+| nfft        | fft length (ms)                                                     | float   | ``[] for auto`` | ``[]``    |
++-------------+---------------------------------------------------------------------+---------+-----------------+-----------+
+| overlap     | STFT overlap (ms)                                                   | float   | N/A             | ``33``    |
++-------------+---------------------------------------------------------------------+---------+-----------------+-----------+
+| filtering   | Corner Fs (Hz) for high-pass filter for mic trace (4-pole elliptic) | float   | ``[] for none`` | ``500``   |
++-------------+---------------------------------------------------------------------+---------+-----------------+-----------+
+| mask_only   | Exclude power weighting in spectral density image                   | logical | N/A             | ``false`` |
++-------------+---------------------------------------------------------------------+---------+-----------------+-----------+
+| spec_thresh | Threshold on power-weighted contour image                           | float   | N/A             | ``.78``   |
++-------------+---------------------------------------------------------------------+---------+-----------------+-----------+
+| norm_amp    | Normalize mic traces by their abs(max) value                        | logical | N/A             | ``true``  |
++-------------+---------------------------------------------------------------------+---------+-----------------+-----------+
+| weighting   | Power weighting                                                     | string  | ``log,lin``     | ``log``   |
++-------------+---------------------------------------------------------------------+---------+-----------------+-----------+
+
+
 
 Similarity scores
 -----------------
