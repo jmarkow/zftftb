@@ -15,14 +15,14 @@ if mod(nparams,2)>0
 end
 
 len=.005; % window length (s)
-song_band=[2e3 6e3];
+song_band=[2e3 6e3]; % frequency band for singing
 overlap=0; % overlap (s)
-song_duration=.8; % smoothing (s) 
+song_duration=.8; % smoothing (s)
 ratio_thresh=2; % ratio song:nonsong
 pow_thresh=-inf; % power threshold (au)
 song_thresh=.2; % song threshold
-songpow_thresh=.8;
-silence=0;
+songpow_thresh=.8; % threshold for song power
+silence=0; % check for silence rather than singing
 
 for i=1:2:nparams
 	switch lower(varargin{i})
@@ -93,4 +93,3 @@ ratio_idx=song_detvec>song_thresh;
 
 
 SONG_IDX=pow_idx&ratio_idx;
-
