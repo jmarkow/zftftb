@@ -57,7 +57,7 @@ for i=1:length(dependency)
     (~isempty(dependency(i).chk)&isempty(which(dependency(i).chk)))
 
     if isempty(dependency(i).basedir)
-      tmp=uigetdir(pwd,'Select directory to place repository in');
+      tmp=uigetdir(fullfile(pwd,'..'),'Select directory to place repository in');
       dependency(i).basedir=tmp;
     end
 
