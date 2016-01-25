@@ -8,9 +8,9 @@ Usage
 Spectrograms
 ------------
 
-To generate a spectrogram, use the function :code:`zftftb_pretty_sonogram`, which computes a simple multi-taper spectrogram using the Gaussian and Gaussian derivative windows.::
+To generate a spectrogram, use the function :code:`zftftb_pretty_sonogram`, which computes a simple multi-taper spectrogram using the Gaussian and Gaussian derivative windows, if ``audio_data`` contains the mic trace and ``fs`` the sampling rate::
 
-  >>[s,f,t]=zftftb_pretty_sonogram(audio_data,48e3,'len',80,'overlap',79.5,'clipping',[-2 2]);
+  >>[s,f,t]=zftftb_pretty_sonogram(audio_data,fs,'len',80,'overlap',79.5,'clipping',[-2 2]);
   >>figure();
   >>imagesc(t,f,s);
   >>axis xy;
