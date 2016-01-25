@@ -11,12 +11,16 @@ This has been tested using MATLAB 2010A and later on Windows and Mac (Linux shou
 Using the install script
 ------------------------
 
-If you are running MATLAB on Linux or OS X, a script is available to automatically add ZFTFTB and any necessary dependencies to your MATLAB path.  Then in MATLAB navigate to the repository or unzipped directory of files::
+First clone the repository somewhere reasonable using the terminal (Linux/OS X)::
 
-  >>cd ~/Downloads/ZFTFTB.git/
+	$git clone git@github.com:jmarkow/zftftb.git
+
+If you are running MATLAB on Linux or OS X, a script is available to automatically add ZFTFTB and any necessary dependencies to your MATLAB path.  First, navigate to the cloned repository or unzipped directory of files from the github repository::
+
+  >>cd some_directory/zftftb/
   >>zftftb_install
 
-You should be prompted to select a base directory for dependencies (e.g. :code:`~/Documents/MATLAB`).  Then, assuming git is installed and your pathdef.m is writable, the rest should be taken care of for you.
+You should be prompted to select a base directory for dependencies (e.g. ``~/Documents/MATLAB``).  Then, assuming git is installed and your pathdef.m is writable, the rest should be taken care of for you.
 
 Manual installation
 -------------------
