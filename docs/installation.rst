@@ -1,6 +1,8 @@
 Installation
 =============
 
+Note that this assumes a passing familiarity with the command line and git.  If you are unfamiliar, google "command line tutorial" and "git tutorial" (hard-linking to specific tutorials would be a fool's errand at this point).  
+
 Simply clone the ZFTFTB github repository, and add the directory and subdirectories to your MATLAB path (including any dependencies, see below).  An installation script is included that automates the entire process.
 
 Requirements
