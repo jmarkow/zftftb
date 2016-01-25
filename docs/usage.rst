@@ -15,7 +15,7 @@ To generate a spectrogram, use the function :code:`zftftb_pretty_sonogram`, whic
   >>imagesc(t,f,s);
   >>axis xy;
 
-The :code:`len` and :code:`overlap` parameters set the length and overlap of the STFT to 80 and 79.5 milliseconds, respectively. Clipping sets the lower and upper clip to -2 and 2 (in logn units, this is the default for legacy compatibility, set the option 'units' to 'dB' to work in decibels).  All options given after the first two, the audio data and the sampling rate, are treated as parameter/value pairs.  
+The :code:`len` and :code:`overlap` parameters set the length and overlap of the STFT to 80 and 79.5 milliseconds, respectively. Clipping sets the lower and upper clip to -2 and 2 (in logn units, this is the default for legacy compatibility, set the option 'units' to 'dB' to work in decibels).  All options given after the first two, the audio data and the sampling rate, are treated as parameter/value pairs.
 
 +------------+----------------------------------------------------------+----------+---------------------+------------+
 | Parameter  | Description                                              | Format   | Options             | Default    |
@@ -59,7 +59,7 @@ Sound clustering is performed with ``zftftb_song_clust``, which computes the Euc
 
 #.  The file filter will use the first extension it finds in the directory. For example, if the first file in the directory is a .wav file, the script assumes all files to process are .wav files.  This can be overridden through any of the script options detailed below.  If you choose to (c)reate a new run, you will be asked to name the sub-directory to store results in.
 #.  After this, you will then need to select an audio file (anywhere on the computer) that contains the template.  Once the file is selected, you will be presented with a GUI to tell the program exactly where the template is in time.
-#.  Finally, you will perform a manual cluster cut on the Euclidean distances between the template and the data.  Note that the distances have been inverted, so higher numbers indicate a closer match.
+#.  Finally, you will perform a manual cluster cut on the L1 distances between the template and the data.  Note that the distances have been inverted, so higher numbers indicate a closer match.
 
 To load audio data from a MATLAB file, ``zftftb_song_clust`` must know which variables contain the audio data and the sampling rate.  For example, this simple function assumes the audio data is in the field ``data`` in the structure ``audio`` and the field ``fs`` contains the sampling rate::
 
@@ -138,7 +138,7 @@ The following parameters can be passed as parameter value pairs.
 +---------------+-----------------------------------------+----------+---------+---------------+
 
 For example, to use a lower threshold on the ratio of power for song to nonsong (all frequencies outside of the ``song_band``)::
-  
+
   >>[idx,t]=zftftb_song_det(y,fs,'song_thresh',.1)
 
 .. _sdi-label:
@@ -184,7 +184,7 @@ Similarity scores
 -----------------
 
 Similarity scores quantify the similarity between two groups of sounds.  You will need the ``contours`` variable returned from ``zftftb_sdi`` (see :ref:`sdi-label`).  To compute the scores between the imaginary contours for groups 1 and 2::
-  
+
   >>[sdi_group1 f t contours_group1]=zftftb_sdi(mic_matrix_group1,fs);
   >>[sdi_group2 f t contours_group2]=zftftb_sdi(mic_matrix_group2,fs);
   >>scores=zftftb_sdi_simscore(contours_group1.im,contours_group2.im,f,t);
