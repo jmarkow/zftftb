@@ -13,7 +13,7 @@ Using the install script
 
 First clone the repository somewhere reasonable using the terminal (Linux/OS X)::
 
-	$git clone git@github.com:jmarkow/zftftb.git
+	$git clone https://github.com/jmarkow/zftftb.git
 
 If you are running MATLAB on Linux or OS X, a script is available to automatically add ZFTFTB and any necessary dependencies to your MATLAB path.  First, navigate to the cloned repository or unzipped directory of files from the github repository::
 
@@ -27,7 +27,7 @@ Manual installation
 
 If you are somewhat comfortable with the command line and MATLAB, manual installation shouldn't be too onerous.  If you are working with OS X or Linux, pop open a terminal and clone the ZFTFTB and Markolab repositories::
 
-  $git clone git@github.com:jmarkow/zftftb.git
-  $git clone git@github.com:jmarkow/markolab.git
+  $git clone https://github.com/jmarkow/zftftb.git
+  $git clone https://github.com/jmarkow/markolab.git
 
-Then, make sure the repositories and their sub-directories are added to the MATLAB path.  
+Then, make sure the repositories and their sub-directories are added to the MATLAB path.
