@@ -16,7 +16,7 @@ package_name='zftftb';
 
 dependency(1).name='markolab';
 dependency(1).chk='markolab_multi_fig_save';
-dependency(1).url='git@github.com:jmarkow/markolab.git';
+dependency(1).url='https://github.com/jmarkow/markolab.git';
 dependency(1).basedir='';
 
 dependency(2).name='zftftb';
