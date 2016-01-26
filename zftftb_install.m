@@ -20,7 +20,7 @@ dependency(1).url='https://github.com/jmarkow/markolab.git';
 dependency(1).basedir='';
 
 dependency(2).name='robofinch';
-dependency(2).chk='robofinch_agg_data'
+dependency(2).chk='robofinch_agg_data';
 dependency(2).url='https://github.com/jmarkow/robofinch.git';
 dependency(2).basedir='';
 

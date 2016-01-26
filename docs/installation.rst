@@ -8,7 +8,7 @@ Simply clone the ZFTFTB github repository, and add the directory and subdirector
 Requirements
 ------------
 
-This has been tested using MATLAB 2010A and later on Windows and Mac (Linux should be fine). You must have the `markolab <https://github.com/jmarkow/markolab/>`_ toolbox in your MATLAB path. The only MATLAB Toolbox required is the Signal Processing toolbox, which is typically included in most standard installations.  It is highly recommended that you have git installed for ease of installation and managing dependencies.
+This has been tested using MATLAB 2010A and later on Windows and Mac (Linux should be fine). You must have the `markolab <https://github.com/jmarkow/markolab/>`_ and `robofinch <https://github.com/jmarkow/robofinch/>`_ toolboxes in your MATLAB path. The only MATLAB Toolbox required is the Signal Processing toolbox, which is typically included in most standard installations.  It is highly recommended that you have git installed for ease of installation and managing dependencies.
 
 Using the install script
 ------------------------
@@ -31,5 +31,6 @@ If you are somewhat comfortable with the command line and MATLAB, manual install
 
   $git clone https://github.com/jmarkow/zftftb.git
   $git clone https://github.com/jmarkow/markolab.git
+  $git clone https://github.com/jmarkow/robofinch.git
 
 Then, make sure the repositories and their sub-directories are added to the MATLAB path.
