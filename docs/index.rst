@@ -15,3 +15,4 @@ Contents:
 
    installation
    usage
+   api

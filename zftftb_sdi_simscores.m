@@ -1,9 +1,9 @@
-function [SCORES]=zftftb_sdi_simscore(CONTOUR_GROUP1,CONTOUR_GROUP2,F,T,varargin)
+function SCORES=zftftb_sdi_simscores(CONTOUR_GROUP1,CONTOUR_GROUP2,F,T,varargin)
 %zftftb_sdi_simscore computes similarity scores between two groups of contours, this
 %method is incredibly sensitive, it is recommended to use a bootstrap to determine
 %the *expected* difference in similarity scores for sounds from the same *group*
 %
-%	[SCORES]=zftftb_sdi_simscore(CONTOUR_GROUP1,CONTOUR_GROUP2,F,T,varargin)
+%	[SCORES]=zftftb_sdi_simscores(CONTOUR_GROUP1,CONTOUR_GROUP2,F,T,varargin)
 %
 %	CONTOUR_GROUP1
 %	3D matrix of contours returned by zftftb_sdi (either the re or im field)

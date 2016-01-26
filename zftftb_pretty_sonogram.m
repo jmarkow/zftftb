@@ -2,8 +2,6 @@ function [IMAGE,F,T]=zftftb_pretty_sonogram(SIGNAL,FS,varargin)
 %zftftb_pretty_sonogram computes a simple 2-taper spectrogram using the
 %Gauss window and derivative of Gauss (the basis for reassignment).
 %
-%	zftftb_pretty_sonogram(SIGNAL,FS,varargin)
-%
 %	SIGNAL
 %	vector with microphone data (double)
 %
@@ -42,8 +40,8 @@ function [IMAGE,F,T]=zftftb_pretty_sonogram(SIGNAL,FS,varargin)
 %
 %		saturation
 %		postproc only, image saturation (0-1, default: .8)
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARAMETER COLLECTION %%%%%%%%%%%%%%%%%
+%
+%
 
 nparams=length(varargin);
 
