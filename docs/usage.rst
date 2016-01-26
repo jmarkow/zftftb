@@ -236,5 +236,5 @@ Scores contains a ``2 x 2`` cell array, where the first dimension indicates the 
 
 .. math:: \text{SIM}_{1,2}^i=\frac{\sum\text{SDI}_1\cdot\text{CONTOUR}^i_2}{\sqrt{\sum(\text{SDI}_1)^2\cdot(\text{CONTOUR}^i_2)^2}}
 
-.. [PLoSCompBio2013] `Long-range order in canary song, PLoS Comp Bio, 2013 <https://dx.doi.org/10.1371/journal.pcbi.1003052>`_
-.. [IEEE2013] `Stable time-frequency contours for sparse signal representation, IEEE EUSIPCO, 2013 <http://ieeexplore.ieee.org/xpls/icp.jsp?arnumber=6811462>`_
+.. [Markowitzetal2013] `Long-range order in canary song, PLoS Comp Bio, 2013 <https://dx.doi.org/10.1371/journal.pcbi.1003052>`_
+.. [Limetal2013] `Stable time-frequency contours for sparse signal representation, IEEE EUSIPCO, 2013 <http://ieeexplore.ieee.org/xpls/icp.jsp?arnumber=6811462>`_
