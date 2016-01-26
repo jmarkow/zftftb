@@ -19,10 +19,15 @@ dependency(1).chk='markolab_multi_fig_save';
 dependency(1).url='https://github.com/jmarkow/markolab.git';
 dependency(1).basedir='';
 
-dependency(2).name='zftftb';
-dependency(2).chk='';
-dependency(2).url='';
-dependency(2).basedir=cur_path;
+dependency(2).name='robofinch';
+dependency(2).chk='robofinch_agg_data'
+dependency(2).url='https://github.com/jmarkow/robofinch.git';
+dependency(2).basedir='';
+
+dependency(3).name='zftftb';
+dependency(3).chk='';
+dependency(3).url='';
+dependency(3).basedir=cur_path;
 
 % dirs to skip
 
