@@ -60,6 +60,17 @@ Sound clustering is performed with ``zftftb_song_clust``, which computes the Euc
 #.  The file filter will use the first extension it finds in the directory. For example, if the first file in the directory is a .wav file, the script assumes all files to process are .wav files.  This can be overridden through any of the script options detailed below.  If you choose to (c)reate a new run, you will be asked to name the sub-directory to store results in.
 #.  After this, you will then need to select an audio file (anywhere on the computer) that contains the template (find a good sample in the ``gif`` directory).  Once the file is selected, you will be presented with a GUI to tell the program exactly where the template is in time.
 #.  Finally, you will perform a manual cluster cut on the L1 distances between the template and the data.  Note that the distances have been inverted, so higher numbers indicate a closer match.
+    The clustering window should look like this,
+
+  .. figure:: figures/cluster1_markup.png
+    :width: 300px
+
+
+  Typically, you will find features on the X and Y that separate the points in the upper right hand corner effectively and draw a border around them.  To do this, try different features for X and Y until you see something that looks like the above figure.  Then, click on ``Draw cluster (X and Y only)``.  The window should now look like this,
+
+  .. figure:: figures/cluster_draw1.png
+    :width: 300px
+
 
 To load audio data from a MATLAB file, ``zftftb_song_clust`` must know which variables contain the audio data and the sampling rate.  For example, this simple function assumes the audio data is in the field ``data`` in the structure ``audio`` and the field ``fs`` contains the sampling rate::
 
@@ -78,16 +89,6 @@ Then pass the anonymous function to the ``audio_load`` parameter::
 
   >>zftftb_song_clust(pwd,'audio_load',loading_function);
 
-The clustering window should look like this,
-
-.. figure:: figures/cluster1_markup.png
-  :width: 300px
-
-
-Typically, you will find features on the X and Y that separate the points in the upper right hand corner effectively and draw a border around them.  To do this, try different features for X and Y until you see something that looks like the above figure.  Then, click on ``Draw cluster (X and Y only)``.  The window should now look like this,
-
-.. figure:: figures/cluster_draw1.png
-  :width: 300px
 
 
 
