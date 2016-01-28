@@ -62,14 +62,28 @@ Sound clustering is performed with ``zftftb_song_clust``, which computes the Euc
 #.  Finally, you will perform a manual cluster cut on the L1 distances between the template and the data.  Note that the distances have been inverted, so higher numbers indicate a closer match.
     The clustering window should look like this,
 
-  .. figure:: figures/cluster1_markup.png
-    :width: 300px
+    .. figure:: figures/cluster1_markup.png
+      :width: 300px
 
 
-  Typically, you will find features on the X and Y that separate the points in the upper right hand corner effectively and draw a border around them.  To do this, try different features for X and Y until you see something that looks like the above figure.  Then, click on ``Draw cluster (X and Y only)``.  The window should now look like this,
+    Typically, you will find features on the X and Y that separate the points in the upper right hand corner effectively and draw a border around them.  To do this, try different features for X and Y until you see something that looks like the above figure.  Then, click on ``Draw cluster (X and Y only)``.  The window should now look like this,
 
-  .. figure:: figures/cluster_draw1.png
-    :width: 300px
+    .. figure:: figures/cluster_draw1.png
+      :width: 300px
+
+    Now draw a polygon around the cluster in the upper right hand corner.  At each vertex left-click, when you're done drawing press ``ENTER``. 
+
+    .. figure:: figures/cluster_draw2.png
+      :width: 30%
+
+    .. figure:: figures/cluster_draw3.png
+      :width: 30%
+
+    .. figure:: figures/cluster_draw4.png
+      :width: 30%
+
+      
+
 
 
 To load audio data from a MATLAB file, ``zftftb_song_clust`` must know which variables contain the audio data and the sampling rate.  For example, this simple function assumes the audio data is in the field ``data`` in the structure ``audio`` and the field ``fs`` contains the sampling rate::
