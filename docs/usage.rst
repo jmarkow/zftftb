@@ -73,16 +73,21 @@ Sound clustering is performed with ``zftftb_song_clust``, which computes the Euc
 
     Now draw a polygon around the cluster in the upper right hand corner.  At each vertex left-click, when you're done drawing press ``ENTER``. 
 
-    .. figure:: figures/cluster_draw2.png
-      :width: 30%
+    .. image:: figures/cluster_draw2.png
+      :width: 20%
 
-    .. figure:: figures/cluster_draw3.png
-      :width: 30%
+    .. image:: figures/cluster_draw3.png
+      :width: 20%
 
-    .. figure:: figures/cluster_draw4.png
-      :width: 30%
+    .. image:: figures/cluster_draw4.png
+      :width: 20%
 
-      
+    .. image:: figures/cluster_draw5.png
+      :width: 20%
+
+
+    Click on `DONE` to indicate that you're finished drawing.  As in the rightmost figure you'll see the points change colors to reflect your selection.  Now, set ``Cluster selection`` to the cluster that you want. Close the window and the script will extract your selection.
+
 
 
 
