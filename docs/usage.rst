@@ -170,7 +170,7 @@ The complex phase :math:`\phi` of the ratio :math:`\eta/X` defines the direction
 
 Here as an example of what the features look like on a sample of zebra finch song.  In practice, amp is simply a smoothed spectrogram, and only frequencies between 3 and 9 kHz are used.
 
-.. figure:: figures/features.png
+.. figure:: figures/features_transparent.png
 
 
 Extracting songs from mat/wav files
