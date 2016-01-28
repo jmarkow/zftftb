@@ -1,5 +1,6 @@
-# Welcome (i.e. what does this do?)
+# The [Z]ebra [F]inch [T]ime [F]requency [T]ool[B]ox
 
-This is a MATLAB toolbox of time-frequency tools, some of which are based on the Gardner & Magnasco reassignment technique, and the newer contour based technique of Lim & Gardner.  Also, these functions depend on the [markolab .m files](https://github.com/jmarkow/markolab) being in your MATLAB path.  
+[![Documentation Status](https://readthedocs.org/projects/gardnerlab-experiments/badge/?version=latest)](http://gardnerlab-experiments.readthedocs.org/en/latest/?badge=latest)
 
-Detailed documentation lives on readthedocs.org, [here](http://zftftb.readthedocs.org/en/latest/).
+This is a MATLAB toolbox of time-frequency tools typically used for analysis of zebra finch song in the lab of Timothy Gardner.
+
