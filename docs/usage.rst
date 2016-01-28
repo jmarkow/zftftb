@@ -81,14 +81,12 @@ Then pass the anonymous function to the ``audio_load`` parameter::
 The clustering window should look like this,
 
 .. figure:: figures/cluster1_markup.png
-  
   :width: 300px
 
 
 Typically, you will find features on the X and Y that separate the points in the upper right hand corner effectively and draw a border around them.  To do this, try different features for X and Y until you see something that looks like the above figure.  Then, click on ``Draw cluster (X and Y only)``.  The window should now look like this,
 
 .. figure:: figures/cluster_draw1.png
-
   :width: 300px
 
 
