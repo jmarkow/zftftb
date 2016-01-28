@@ -92,8 +92,7 @@ Sound clustering is performed with ``zftftb_song_clust``, which computes the L1 
 
     Click on `DONE` to indicate that you're finished drawing.  As in the rightmost figure you'll see the points change colors to reflect your selection.  Now, set ``Cluster selection`` to the cluster that you want. Close the window and the script will extract your selection.
 
-
-
+Parameters for ``zftftb_song_clust`` are given below.
 
 +------------------+----------------------------------------------------------------+--------------------+------------------+--------------+
 | Parameter        | Description                                                    | Format             | Options          | Default      |
@@ -140,7 +139,7 @@ Then pass the anonymous function to the ``audio_load`` parameter::
 
   >>zftftb_song_clust(pwd,'audio_load',loading_function);
 
-Parameters for ``zftftb_song_clust`` are given below.
+
 
 
 Features used for clustering
