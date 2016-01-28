@@ -42,7 +42,7 @@ The :code:`len` and :code:`overlap` parameters set the length and overlap of the
 Sound clustering
 ----------------
 
-Sound clustering is performed with ``zftftb_song_clust``, which computes the Euclidean distance between features computed for a user-defined template, and a set of audio files.  The first option to the script is the directory to process, if no options are given it will process the current directory (pwd) with parameters set to the default. All options after the first, the directory to process, are passed as parameter/value pairs (see examples below). The basic workflow is as follows:  (1) spectral features are computed for all files in a director, (2) the Euclidean distance between a template and the files is computed, (3) the user selects hits based on the distance measure.  Results for a particular template are stored in a sub-directory of your choice.  You can go back to this directory and re-run any stage of the process without having to recompute the other stages (examples are given below).  It will work with data saved in .mat files (requires a function to point to location of the data and sampling rate), or audio files.  
+Sound clustering is performed with ``zftftb_song_clust``, which computes the L1 distance between features computed for a user-defined template, and a set of audio files.  The first option to the script is the directory to process, if no options are given it will process the current directory (pwd) with parameters set to the default. All options after the first, the directory to process, are passed as parameter/value pairs (see examples below). The basic workflow is as follows:  (1) spectral features are computed for all files in a director, (2) the L1 distance between a template and the files is computed, (3) the user selects hits based on the distance measure.  Results for a particular template are stored in a sub-directory of your choice.  You can go back to this directory and re-run any stage of the process without having to recompute the other stages (examples are given below).  It will work with data saved in .mat files (requires a function to point to location of the data and sampling rate), or audio files.  
 
 .. warning:: You may want to use your selection for automatic clustering later, if so set the ``train_classifier`` parameter to ``1`` or ``true``.
 
@@ -91,24 +91,7 @@ Sound clustering is performed with ``zftftb_song_clust``, which computes the Euc
     Click on `DONE` to indicate that you're finished drawing.  As in the rightmost figure you'll see the points change colors to reflect your selection.  Now, set ``Cluster selection`` to the cluster that you want. Close the window and the script will extract your selection.
 
 
-To load audio data from a MATLAB file, ``zftftb_song_clust`` must know which variables contain the audio data and the sampling rate.  For example, this simple function assumes the audio data is in the field ``data`` in the structure ``audio`` and the field ``fs`` contains the sampling rate::
 
-  function [DATA,FS]=my_audioload(FILE)
-  %
-
-  load(FILE,'audio');
-  DATA=audio.data;
-  FS=audio.fs;
-
-Save it as ``my_audioload.m`` somewhere in your MATLAB path (e.g. ``~/Documents/MATLAB``).  Then, assign the function to an anonymous function::
-
-  >>loading_function=@(FILE) my_audioload(FILE);
-
-Then pass the anonymous function to the ``audio_load`` parameter::
-
-  >>zftftb_song_clust(pwd,'audio_load',loading_function);
-
-Parameters for ``zftftb_song_clust`` are given below.
 
 +------------------+----------------------------------------------------------------+--------------------+------------------+--------------+
 | Parameter        | Description                                                    | Format             | Options          | Default      |
@@ -133,6 +116,61 @@ Parameters for ``zftftb_song_clust`` are given below.
 +------------------+----------------------------------------------------------------+--------------------+------------------+--------------+
 | train_classifier | Train a classifier to recognize the cluster cut                | logical            | N/A              | ``1``        |
 +------------------+----------------------------------------------------------------+--------------------+------------------+--------------+
+
+
+Loading audio data using anonymous functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To load audio data from a MATLAB file, ``zftftb_song_clust`` must know which variables contain the audio data and the sampling rate.  For example, this simple function assumes the audio data is in the field ``data`` in the structure ``audio`` and the field ``fs`` contains the sampling rate::
+
+  function [DATA,FS]=my_audioload(FILE)
+  %
+
+  load(FILE,'audio');
+  DATA=audio.data;
+  FS=audio.fs;
+
+Save it as ``my_audioload.m`` somewhere in your MATLAB path (e.g. ``~/Documents/MATLAB``).  Then, assign the function to an anonymous function::
+
+  >>loading_function=@(FILE) my_audioload(FILE);
+
+Then pass the anonymous function to the ``audio_load`` parameter::
+
+  >>zftftb_song_clust(pwd,'audio_load',loading_function);
+
+Parameters for ``zftftb_song_clust`` are given below.
+
+
+Features used for clustering
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The features are detailed in [Pooleetal2012]_.  In brief, the reassigned spectrogram is computed by first taking the Gabor trasform, i.e. short-time Fourier transform (STFT) with a Gaussian window,
+
+.. math:: 
+  X(\tau,\omega)=\int e^{-(t-\tau)^2/2\sigma^2}e^{i\omega(t-\tau)}\chi(\tau)d\tau\\
+
+and then the STFT with derivative of the Gaussian window
+ 
+.. math::
+  \eta(\tau,\omega)=\frac{2}{\sigma}\int(\tau-t)e^{-(t-\tau)^2/2\sigma^2}e^{i\omega(t-\tau)}\chi(\tau)d\tau\\
+
+a ratio between the ratio is then used as the basis for the features,
+
+.. math::
+  \eta/X=|S|e^{i\phi}
+
+The complex phase :math:`\phi` of the ratio :math:`\eta/X` defines the direction of maximum spectral derivative.  From these terms we calculate the following features:  local power in the sonogram :math:`|X|`, :math:`cos(\phi)`, then a measure of how quickly the spectral derivative changes in time :math:`\frac{\partial(cos(\phi))}{\partial t}` and frequency :math:`\frac{\partial(cos(\phi))}{\partial\omega}`.  The points presented to the user for manual cluster cutting are local minima in the L1 distance in these features between the template and the sound data to be clustered.  The features in the clustering GUI are labeled as follows:
+
+#. ``cos`` -> :math:`cos(\phi)`
+#. ``dx`` -> :math:`\frac{\partial(cos(\phi))}{\partial t}`
+#. ``dy`` -> :math:`\frac{\partial(cos(\phi))}{\partial\omega}`
+#. ``amp`` -> :math:`|X|`
+#. ``product`` -> product of all features
+#. ``curvature`` -> curvature of product
+
+Here as an example of what the features look like on a sample of zebra finch song.  In practice, amp is simply a smoothed spectrogram, and only frequencies between 3 and 9 kHz are used.
+
+.. figure:: figures/features.png
 
 
 Extracting songs from mat/wav files
@@ -268,5 +306,7 @@ Scores contains a ``2 x 2`` cell array, where the first dimension indicates the 
 
 .. math:: \text{SIM}_{1,2}^i=\frac{\sum\text{SDI}_1\cdot\text{CONTOUR}^i_2}{\sqrt{\sum(\text{SDI}_1)^2\cdot(\text{CONTOUR}^i_2)^2}}
 
+.. [Pooleetal2012] `The Song Must Go On:  Resilience of the Songbird Vocal Motor Pathway <https://dx.doi.org/10.1371/journal.pone.0038173>`_`
 .. [Markowitzetal2013] `Long-range order in canary song, PLoS Comp Bio, 2013 <https://dx.doi.org/10.1371/journal.pcbi.1003052>`_
 .. [Limetal2013] `Stable time-frequency contours for sparse signal representation, IEEE EUSIPCO, 2013 <http://ieeexplore.ieee.org/xpls/icp.jsp?arnumber=6811462>`_
+
