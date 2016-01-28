@@ -65,12 +65,14 @@ Sound clustering is performed with ``zftftb_song_clust``, which computes the L1 
     The clustering window should look like this,
 
     .. figure:: figures/cluster1_markup.png
+      :align: center
       :width: 300px
 
 
     Typically, you will find features on the X and Y that separate the points in the upper right hand corner effectively and draw a border around them.  To do this, try different features for X and Y until you see something that looks like the above figure.  Then, click on ``Draw cluster (X and Y only)``.  The window should now look like this,
 
     .. figure:: figures/cluster_draw1.png
+      :align: center
       :width: 300px
 
     Now draw a polygon around the cluster in the upper right hand corner.  At each vertex left-click, when you're done drawing press ``ENTER``. 
@@ -171,6 +173,7 @@ The complex phase :math:`\phi` of the ratio :math:`\eta/X` defines the direction
 Here as an example of what the features look like on a sample of zebra finch song.  In practice, amp is simply a smoothed spectrogram, and only frequencies between 3 and 9 kHz are used.
 
 .. figure:: figures/features_transparent.png
+  :align: center
 
 
 Extracting songs from mat/wav files
