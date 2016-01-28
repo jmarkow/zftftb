@@ -44,6 +44,8 @@ Sound clustering
 
 Sound clustering is performed with ``zftftb_song_clust``, which computes the Euclidean distance between features computed for a user-defined template, and a set of audio files.  The first option to the script is the directory to process, if no options are given it will process the current directory (pwd) with parameters set to the default. All options after the first, the directory to process, are passed as parameter/value pairs (see examples below). The basic workflow is as follows:  (1) spectral features are computed for all files in a director, (2) the Euclidean distance between a template and the files is computed, (3) the user selects hits based on the distance measure.  Results for a particular template are stored in a sub-directory of your choice.  You can go back to this directory and re-run any stage of the process without having to recompute the other stages (examples are given below).  It will work with data saved in .mat files (requires a function to point to location of the data and sampling rate), or audio files.  
 
+.. warning:: You may want to use your selection for automatic clustering later, if so set the ``train_classifier`` parameter to ``1`` or ``true``.
+
 #.  To cluster a set of .wav files use the following command.
     ::
 
@@ -89,8 +91,6 @@ Sound clustering is performed with ``zftftb_song_clust``, which computes the Euc
     Click on `DONE` to indicate that you're finished drawing.  As in the rightmost figure you'll see the points change colors to reflect your selection.  Now, set ``Cluster selection`` to the cluster that you want. Close the window and the script will extract your selection.
 
 
-
-
 To load audio data from a MATLAB file, ``zftftb_song_clust`` must know which variables contain the audio data and the sampling rate.  For example, this simple function assumes the audio data is in the field ``data`` in the structure ``audio`` and the field ``fs`` contains the sampling rate::
 
   function [DATA,FS]=my_audioload(FILE)
@@ -108,35 +108,32 @@ Then pass the anonymous function to the ``audio_load`` parameter::
 
   >>zftftb_song_clust(pwd,'audio_load',loading_function);
 
-
-
-
-
-
-
 Parameters for ``zftftb_song_clust`` are given below.
 
-+------------+----------------------------------------------------------------+--------------------+------------------+--------------+
-| Parameter  | Description                                                    | Format             | Options          | Default      |
-+============+================================================================+====================+==================+==============+
-| colors     | colormap to use for spectrograms                               | string             | MATLAB colormaps | ``hot``      |
-+------------+----------------------------------------------------------------+--------------------+------------------+--------------+
-| len        | STFT window length for spectrograms (ms)                       | integer            | N/A              | ``34``       |
-+------------+----------------------------------------------------------------+--------------------+------------------+--------------+
-| overlap    | STFT overlap (ms)                                              | integer            | N/A              | ``33``       |
-+------------+----------------------------------------------------------------+--------------------+------------------+--------------+
-| disp_band  | STFT frequency range                                           | 2 ints             | N/A              | ``[1 10e3]`` |
-+------------+----------------------------------------------------------------+--------------------+------------------+--------------+
-| audio_load | Anonymous function used for loading audio data from .mat files | anonymous function | N/A              |              |
-+------------+----------------------------------------------------------------+--------------------+------------------+--------------+
-| data_load  | Anonymous function used for loading data to align              | anon               | N/A              |              |
-+------------+----------------------------------------------------------------+--------------------+------------------+--------------+
-| file_filt  | File extension filter                                          | string             | ``auto,wav,mat`` | ``auto``     |
-+------------+----------------------------------------------------------------+--------------------+------------------+--------------+
-| extract    | Extract .gif, .wav, and .mat files post-alignment              | logical            | N/A              | ``true``     |
-+------------+----------------------------------------------------------------+--------------------+------------------+--------------+
-| clust_lim  | Limit on number of points to show for cluster cutting          | integer            | N/A              | ``1e4``      |
-+------------+----------------------------------------------------------------+--------------------+------------------+--------------+
++------------------+----------------------------------------------------------------+--------------------+------------------+--------------+
+| Parameter        | Description                                                    | Format             | Options          | Default      |
++==================+================================================================+====================+==================+==============+
+| colors           | colormap to use for spectrograms                               | string             | MATLAB colormaps | ``hot``      |
++------------------+----------------------------------------------------------------+--------------------+------------------+--------------+
+| len              | STFT window length for spectrograms (ms)                       | integer            | N/A              | ``34``       |
++------------------+----------------------------------------------------------------+--------------------+------------------+--------------+
+| overlap          | STFT overlap (ms)                                              | integer            | N/A              | ``33``       |
++------------------+----------------------------------------------------------------+--------------------+------------------+--------------+
+| disp_band        | STFT frequency range                                           | 2 ints             | N/A              | ``[1 10e3]`` |
++------------------+----------------------------------------------------------------+--------------------+------------------+--------------+
+| audio_load       | Anonymous function used for loading audio data from .mat files | anonymous function | N/A              |              |
++------------------+----------------------------------------------------------------+--------------------+------------------+--------------+
+| data_load        | Anonymous function used for loading data to align              | anon               | N/A              |              |
++------------------+----------------------------------------------------------------+--------------------+------------------+--------------+
+| file_filt        | File extension filter                                          | string             | ``auto,wav,mat`` | ``auto``     |
++------------------+----------------------------------------------------------------+--------------------+------------------+--------------+
+| extract          | Extract .gif, .wav, and .mat files post-alignment              | logical            | N/A              | ``true``     |
++------------------+----------------------------------------------------------------+--------------------+------------------+--------------+
+| clust_lim        | Limit on number of points to show for cluster cutting          | integer            | N/A              | ``1e4``      |
++------------------+----------------------------------------------------------------+--------------------+------------------+--------------+
+| train_classifier | Train a classifier to recognize the cluster cut                | logical            | N/A              | ``1``        |
++------------------+----------------------------------------------------------------+--------------------+------------------+--------------+
+
 
 Extracting songs from mat/wav files
 -----------------------------------
