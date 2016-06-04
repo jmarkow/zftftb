@@ -167,7 +167,7 @@ if ~exist(fullfile(proc_dir,'template_data.mat'),'file')
 	save(fullfile(proc_dir,'template_data.mat'),'template','padding');
 
 	template_fig=figure('Visible','off');
-	[template_image,f,t]=zftftb_pretty_sonogram(template.data,template.fs,'len',35,'overlap',34.9,'filtering',300,'zeropad',0);
+	[template_image,f,t]=zftftb_pretty_sonogram(template.data,template.fs,'len',35,'overlap',34.9,'filtering',300,'zeropad',0,'norm_amp',1);
 
 	startidx=max([find(f<=disp_band(1));1]);
 

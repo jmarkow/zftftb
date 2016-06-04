@@ -137,7 +137,8 @@ parfor i=1:nhits
 		% simply read in the file and score it
 		% getfield hack to get around parfor errors
 
-		switch lower(ext)
+		try
+			switch lower(ext)
 			case '.mat'
 
 				% use custom loading function
@@ -161,6 +162,10 @@ parfor i=1:nhits
 				else
 					[audio_data,audio_fs]=audioread(input_file);
 				end
+			end
+		catch
+			warning('Could not load file %s, skipping...\n',input_file);
+			continue;
 		end
 
 		if length(audio_data)>=len
