@@ -143,17 +143,17 @@ parfor i=1:nhits
 
 				% use custom loading function
 
-				%if ~isempty(audio_load)
-				%	[audio_data,audio_fs]=audio_load{i}(input_file);
-				%else
-				%	fprintf('No loading function found for file %s\n',input_file);
-				%	audio_data=[];
-				%	audio_fs=[];
-				%end
-
-				tmp=load(input_file,'audio');
-				audio_data=tmp.audio.data;
-				audio_fs=tmp.audio.fs;
+				if ~isempty(audio_load)
+					[audio_data,audio_fs]=audio_load{i}(input_file);
+				else
+					fprintf('No loading function found for file %s\n',input_file);
+					audio_data=[];
+					audio_fs=[];
+				end
+                
+% 				tmp=load(input_file,'audio');
+% 				audio_data=tmp.audio.data;
+% 				audio_fs=tmp.audio.fs;
 
 
 			case '.wav'
