@@ -1,4 +1,4 @@
-function [SONG_IDX,T]=zftftb_song_det(AUDIO,FS,varargin)
+function [SONG_IDX,T,SONG_RATIO,SONG,POW_DETVEC,SONG_DETVEC]=zftftb_song_det(AUDIO,FS,varargin)
 %based on Andalmann's algorithm
 
 if nargin<2
@@ -65,11 +65,11 @@ max_idx=min(find(f>=song_band(2)));
 
 % take the song/nonsong power ratio
 
-song=mean(power(min_idx:max_idx,:),1);
+SONG=mean(power(min_idx:max_idx,:),1);
 nonsong=mean(power([1:min_idx-1 max_idx+1:end],:),1)+eps;
 
-song_ratio=song./nonsong;
-%song_detvec=smooth(double(song_ratio>ratio_thresh),round((FS*song_duration)/(len-overlap)));
+SONG_RATIO=SONG./nonsong;
+%SONG_DETVEC=smooth(double(SONG_RATIO>ratio_thresh),round((FS*song_duration)/(len-overlap)));
 
 % convolve with a moving average filter
 
@@ -77,17 +77,17 @@ filt_size=round((FS*song_duration)/(len-overlap));
 mov_filt=ones(1,filt_size)*1/filt_size;
 
 if ~silence
-	song_detvec=conv(double(song_ratio>ratio_thresh),mov_filt,'same');
-	pow_detvec=conv(double(song>pow_thresh),mov_filt,'same');
+	SONG_DETVEC=conv(double(SONG_RATIO>ratio_thresh),mov_filt,'same');
+	POW_DETVEC=conv(double(SONG>pow_thresh),mov_filt,'same');
 else
-	song_detvec=conv(double(song_ratio<ratio_thresh),mov_filt,'same');
-	pow_detvec=conv(double(song<pow_thresh),mov_filt,'same');
+	SONG_DETVEC=conv(double(SONG_RATIO<ratio_thresh),mov_filt,'same');
+	POW_DETVEC=conv(double(SONG<pow_thresh),mov_filt,'same');
 end
 
 % where is the threshold exceeded for both the raw power and the ratio?
 
-pow_idx=pow_detvec>songpow_thresh;
-ratio_idx=song_detvec>song_thresh;
+pow_idx=POW_DETVEC>songpow_thresh;
+ratio_idx=SONG_DETVEC>song_thresh;
 
 %%%%
 
